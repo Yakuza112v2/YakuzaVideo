@@ -5,3 +5,4 @@ release-files/
 __pycache__/
 *.p12
 *.keystore
+assets/*-original.png

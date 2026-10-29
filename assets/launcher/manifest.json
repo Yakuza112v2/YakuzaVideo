@@ -1,0 +1,62 @@
+{
+  "res/drawable-hdpi-v4/app_banner": {
+    "file": "drawable-hdpi-v4-banner.png",
+    "width": 240,
+    "height": 135,
+    "sha256": "537c5e0938762f78652ef0f633ce36dce16b7e154ad7b16a96fae86af8f79553"
+  },
+  "res/drawable-xhdpi-v4/app_banner": {
+    "file": "drawable-xhdpi-v4-banner.png",
+    "width": 320,
+    "height": 180,
+    "sha256": "6f01021976b8662261b3f5120d5a3b02e349f9220953a14387d67ef2752f67e5"
+  },
+  "res/drawable-xxhdpi-v4/app_banner": {
+    "file": "drawable-xxhdpi-v4-banner.png",
+    "width": 480,
+    "height": 270,
+    "sha256": "24ddf9b6cb90aae668669dec7d97b831144b1e92d2251f64ccc175c2d0b6f985"
+  },
+  "res/drawable-xxxhdpi-v4/app_banner": {
+    "file": "drawable-xxxhdpi-v4-banner.png",
+    "width": 640,
+    "height": 360,
+    "sha256": "533cd9e264e5e8560129170445c37e1ca17ef126d76f633a61160bdf07f2e86e"
+  },
+  "res/drawable/app_banner": {
+    "file": "drawable-banner.png",
+    "width": 160,
+    "height": 90,
+    "sha256": "b02d8d9baa2649dde79a38eec792c893d084e8b0d07154064ffff5781eeaaa05"
+  },
+  "res/mipmap-hdpi-v4/ic_app": {
+    "file": "mipmap-hdpi-v4-icon.png",
+    "width": 120,
+    "height": 120,
+    "sha256": "38733677b4d58819d21209310bb7258f1abfcf7e9179173257f8f184ddb640fd"
+  },
+  "res/mipmap-mdpi-v4/ic_app": {
+    "file": "mipmap-mdpi-v4-icon.png",
+    "width": 80,
+    "height": 80,
+    "sha256": "d5161db695cd9b3f697f18606f3fa578596ba1b92b03fa65699eab3cebc5f72b"
+  },
+  "res/mipmap-xhdpi-v4/ic_app": {
+    "file": "mipmap-xhdpi-v4-icon.png",
+    "width": 160,
+    "height": 160,
+    "sha256": "b94d33d85652e14795caea7c27b22cdd327fca22eba2c0d8cdad94a8a9b451ce"
+  },
+  "res/mipmap-xxhdpi-v4/ic_app": {
+    "file": "mipmap-xxhdpi-v4-icon.png",
+    "width": 240,
+    "height": 240,
+    "sha256": "60db9472fb58ef893e81b5723a926e8d7ff2f7ea6adc9d50debccd73544ea2e6"
+  },
+  "res/mipmap-xxxhdpi-v4/ic_app": {
+    "file": "mipmap-xxxhdpi-v4-icon.png",
+    "width": 320,
+    "height": 320,
+    "sha256": "559e2d3758dd62fb9e4abfd32332cdfa745b8873891e160938e2419de8a20286"
+  }
+}

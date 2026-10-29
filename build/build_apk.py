@@ -19,6 +19,19 @@ NEW_URL = b"https://cdn.jsdelivr.net/gh/Yakuza112v2/YakuzaVideo@main/cobalt.js?v
 OLD_API = "https://api.github.com/repos/reisxd/TizenTubeCobalt/releases/latest"
 NEW_API = "https://api.github.com/repos/Yakuza112v2/YakuzaVideo/releases/latest"
 ASSET = "YakuzaVideo-armeabi-v7a.apk"
+BRANDING_DIRECTORY = Path(__file__).resolve().parent.parent / "assets" / "launcher"
+
+
+def launcher_artwork():
+    entries = json.loads((BRANDING_DIRECTORY / "manifest.json").read_text(encoding="utf-8"))
+    result = {}
+    for resource, entry in entries.items():
+        data = (BRANDING_DIRECTORY / entry["file"]).read_bytes()
+        assert hashlib.sha256(data).hexdigest() == entry["sha256"], resource
+        assert data[:8] == b"\x89PNG\r\n\x1a\n", resource
+        assert struct.unpack_from(">II", data, 16) == (entry["width"], entry["height"]), resource
+        result[resource] = data
+    return result
 
 
 def verify(path, expected):
@@ -144,13 +157,16 @@ def build(apk, script, output, run):
     verify(apk, APK_SHA256); verify(script, SCRIPT_SHA256)
     version = "1.0." + str(run); code = int(run)
     output = Path(output); output.mkdir(parents=True, exist_ok=True)
+    artwork = launcher_artwork()
     with zipfile.ZipFile(apk) as source, zipfile.ZipFile(output/"unsigned.apk", "w") as target:
+        assert set(artwork).issubset(source.namelist()), "Missing launcher resource"
         for info in source.infolist():
             upper = info.filename.upper()
             if upper == "META-INF/MANIFEST.MF" or (upper.startswith("META-INF/") and upper.endswith((".SF", ".RSA", ".DSA", ".EC"))): continue
             data = source.read(info)
             if info.filename == "AndroidManifest.xml": data = adapt_manifest(data, version, code)
             elif info.filename == "resources.arsc": data = adapt_resources(data)
+            elif info.filename in artwork: data = artwork[info.filename]
             elif info.filename == "lib/armeabi-v7a/libchrobalt.so":
                 assert len(OLD_URL) == len(NEW_URL) and data.count(OLD_URL) == 1
                 data = data.replace(OLD_URL, NEW_URL)

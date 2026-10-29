@@ -1,7 +1,7 @@
 import json,struct,unittest,zipfile,os
 from pathlib import Path
 from inspect_apk import manifest
-from build_apk import PACKAGE,UPSTREAM_PACKAGE,OLD_URL,NEW_URL,NEW_API,ASSET
+from build_apk import PACKAGE,UPSTREAM_PACKAGE,OLD_URL,NEW_URL,NEW_API,ASSET,launcher_artwork
 class YakuzaVideoApkTest(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
@@ -45,10 +45,25 @@ class YakuzaVideoApkTest(unittest.TestCase):
   self.assertIn("/releases/download/v"+version+"/",update["package"]["downloadUrl"])
  def test_other_payloads_and_notices_are_preserved(self):
   modified={"AndroidManifest.xml","resources.arsc","lib/armeabi-v7a/libchrobalt.so"}
+  modified.update(launcher_artwork())
   for name in self.source.namelist():
    upper=name.upper()
    signature=upper=="META-INF/MANIFEST.MF" or (upper.startswith("META-INF/") and upper.endswith((".SF",".RSA",".DSA",".EC")))
    if name not in modified and not signature:self.assertEqual(self.source.read(name),self.output.read(name),name)
+ def test_launcher_resources_are_replaced_in_every_density(self):
+  artwork=launcher_artwork()
+  original={n for n in self.source.namelist() if (n.startswith("res/mipmap-") and n.endswith("/ic_app")) or (n.startswith("res/drawable") and n.endswith("/app_banner"))}
+  self.assertEqual(original,set(artwork));self.assertEqual(10,len(artwork))
+  for name,data in artwork.items():
+   self.assertEqual(data,self.output.read(name));self.assertNotEqual(self.source.read(name),data)
+ def test_launcher_manifest_keeps_icon_banner_and_tv_entry(self):
+  original=manifest(self.source.read("AndroidManifest.xml"))
+  old=next(t["attrs"] for t in original if t["tag"]=="application")
+  app=next(t["attrs"] for t in self.tags if t["tag"]=="application")
+  self.assertEqual(old["icon"],app["icon"]);self.assertEqual(old["banner"],app["banner"])
+  categories={t["attrs"].get("name") for t in self.tags if t["tag"]=="category"}
+  self.assertIn("android.intent.category.LAUNCHER",categories)
+  self.assertIn("android.intent.category.LEANBACK_LAUNCHER",categories)
  def test_userscript_uses_own_update_source(self):
   script=(self.directory/"cobalt.js").read_text(encoding="utf-8")
   self.assertIn(NEW_API,script);self.assertNotIn("api.github.com/repos/reisxd/TizenTubeCobalt/releases/latest",script)
