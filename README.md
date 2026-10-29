@@ -13,7 +13,6 @@ YouTube auf dem Fernseher – mit Werbeblockierung, zusätzlichen Wiedergabeopti
 - **Wiedergabe anpassen:** Geschwindigkeit und bevorzugte Videoqualität einstellen.
 - **Untertitel anpassen:** Sprache und Darstellung auswählen und die Darstellung speichern.
 - **Videos organisieren:** Warteschlange nutzen, Videos in Playlists speichern oder zu „Später ansehen“ hinzufügen.
-- **Mehr Optionen per Fernbedienung:** OK gedrückt halten, um das Videomenü mit Einträgen wie „Kein Interesse“ und „Keine Videos von diesem Kanal empfehlen“ zu öffnen.
 - **Ansicht anpassen:** Shorts und Videovorschauen ein- oder ausblenden.
 - **YouTube-Konto verwenden:** Anmelden und auf deine Abos und Playlists zugreifen.
 - **Deutsche Zusatzmenüs:** Deutsche Videooptionen und Rückmeldungen.
