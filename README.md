@@ -22,11 +22,3 @@ Ein praktischer Start- und Wiedergabetest auf dem Fire TV ist noch offen.
 Das gemeldete Problem mit fehlenden Videoempfehlungen ist noch nicht behoben;
 ein neuer Projektname verändert den von YouTube gelieferten Empfehlungsfeed nicht.
 
-## Entwicklung
-
-`build/` enthält das Build-Rezept und Prüfungen für Paket, ABI, Signatur,
-Android-Ressourcen, erhaltene Nutzdaten und Update-Auswahl.
-Der Build verwendet festgelegte, per SHA-256 geprüfte Komponenten und signiert die APK.
-Die Cobalt-Binärdatei wird angepasst; Chromium wird dabei nicht neu kompiliert.
-
-Komponenten, Quellen und Lizenzen: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
