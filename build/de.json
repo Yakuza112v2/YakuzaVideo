@@ -1,0 +1,28 @@
+{
+  "videoMenu": {
+    "notInterested": "Kein Interesse",
+    "dontRecommendChannel": "Keine Videos von diesem Kanal empfehlen",
+    "play": "Wiedergeben",
+    "saveToWatchLater": "Zur Playlist „Später ansehen“ hinzufügen",
+    "removeFromWatchLater": "Aus „Später ansehen“ entfernen",
+    "saveToPlaylist": "In Playlist speichern",
+    "addToQueue": "Zur Warteschlange hinzufügen",
+    "goToChannel": "Zum Kanal",
+    "videoOptions": "Videooptionen"
+  },
+  "common": {"back": "Zurück"},
+  "toasts": {
+    "feedbackSent": "Feedback gesendet.",
+    "sidebarContentsUpdated": {
+      "title": "Seitenleiste aktualisiert",
+      "subtitle": "Die Inhalte der Seitenleiste wurden aktualisiert."
+    }
+  },
+  "settings": {
+    "options": {
+      "misc": {
+        "options": {"ttWelcomeMsg": "Begrüßungsnachricht beim Start anzeigen"}
+      }
+    }
+  }
+}

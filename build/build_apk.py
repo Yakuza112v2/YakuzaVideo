@@ -163,6 +163,13 @@ def adapt_script(source):
         parts[index] = parts[index].replace("TizenTube Cobalt", "YakuzaVideo").replace("TizenTubeCobalt", "YakuzaVideo").replace("TizenTube", "YakuzaVideo")
     source = "".join(parts)
     source = re.sub(r'madeByText:"(?:[^"\\]|\\.)*"', 'madeByText:"YakuzaVideo"', source)
+    source = re.sub(r'(ttWelcomeMsg:")((?:[^"\\]|\\.)*)(")',
+                    lambda match: match[1] + re.sub(r'\bTT\b', 'YakuzaVideo', match[2]) + match[3], source)
+    german = json.loads((Path(__file__).parent / "de.json").read_text(encoding="utf-8"))
+    patch = '/*YAKUZAVIDEO_LOCALE_START*/(function merge(target,extra){for(const key of Object.keys(extra)){const value=extra[key];if(value&&typeof value==="object"&&!Array.isArray(value)){if(!target[key]||typeof target[key]!=="object")target[key]={};merge(target[key],value)}else target[key]=value}})(Ea.de.translation,' + json.dumps(german, ensure_ascii=False, separators=(",", ":")) + ');/*YAKUZAVIDEO_LOCALE_END*/'
+    anchor = 'ma.init({lng:va,'
+    assert source.count(anchor) == 1, "Unexpected locale initialization"
+    source = source.replace(anchor, patch + anchor)
     return "/* YakuzaVideo, 2026-10-29. https://github.com/Yakuza112v2/YakuzaVideo */\n" + source
 
 
@@ -188,7 +195,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["YakuzaVideo mit eigenem App-Icon und TV-Kachel.","Eigene Oberfläche, Werbeblockierung und GitHub-Updates.","Android 7 oder neuer erforderlich."]}}
+        "changelog_de":["Das Menü beim langen Drücken auf OK bleibt auf Deutsch.","Deutsche Rückmeldungen und bereinigte Begrüßungsoption."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)

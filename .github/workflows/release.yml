@@ -37,6 +37,7 @@ jobs:
           python3 build/test_apk.py
           node --check output/player.js
           node build/test_updater.cjs output/player.js
+          node build/test_locale.cjs output/player.js
       - name: Align, sign and verify APK
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -104,6 +105,8 @@ jobs:
           - Eigene App-Kennung: com.yakuza.video
           - Echte armeabi-v7a-APK, Werbeblockierung und GitHub-Update-Abruf.
           - Eigenes YakuzaVideo-App-Icon und TV-Startkachel in allen Auflösungen.
+          - Deutsches Menü beim langen Drücken auf OK und deutsche Rückmeldungen.
+          - Bereinigte Option für die Begrüßungsnachricht beim Start.
           - Mindestens Android 7 / API 24.
 
           YakuzaVideo-armeabi-v7a.apk installieren und bei YouTube anmelden.

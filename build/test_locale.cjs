@@ -1,0 +1,23 @@
+const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:assert/strict');
+const script = fs.readFileSync(process.argv[2], 'utf8');
+const start = script.indexOf('wa={'), end = script.indexOf(',Ca=', start);
+assert.ok(start >= 0 && end > start);
+const german = vm.runInNewContext('(' + script.slice(start + 3, end) + ')');
+// Reproduce the original defect before executing the actual initialization patch.
+assert.equal(german.videoMenu.notInterested, 'Not interested');
+const a = script.indexOf('/*YAKUZAVIDEO_LOCALE_START*/'), b = script.indexOf('/*YAKUZAVIDEO_LOCALE_END*/', a);
+assert.ok(a >= 0 && b > a && b < script.indexOf('ma.init({lng:va,'));
+const originalTitle = german.settings.options.misc.title;
+const context = {Ea: {de: {translation: german}}};
+vm.createContext(context); vm.runInContext(script.slice(a, b), context);
+const expected = JSON.parse(fs.readFileSync(__dirname + '/de.json', 'utf8'));
+assert.deepEqual(JSON.parse(JSON.stringify(german.videoMenu)), expected.videoMenu);
+assert.equal(german.toasts.feedbackSent, 'Feedback gesendet.');
+assert.equal(german.common.back, 'Zurück');
+assert.equal(german.settings.options.misc.options.ttWelcomeMsg, 'Begrüßungsnachricht beim Start anzeigen');
+assert.equal(german.settings.options.misc.title, originalTitle);
+assert.equal(german.toasts.videoAddedToQueue, 'Video wurde zur Warteschlange hinzugefügt');
+const welcomeLabels = [...script.matchAll(/ttWelcomeMsg:"((?:[^"\\]|\\.)*)"/g)];
+assert.ok(welcomeLabels.length >= 30);
+for (const match of welcomeLabels) assert.doesNotMatch(match[1], /\bTT\b/);
+console.log('German long-press menu, feedback, welcome option and preserved translations verified');

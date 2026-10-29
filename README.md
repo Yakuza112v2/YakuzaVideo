@@ -28,13 +28,4 @@ Ein neues Release entsteht über den Workflow **YakuzaVideo APK**.
 
 Ein praktischer Start- und Wiedergabetest auf dem Fire TV ist noch offen.
 Das gemeldete Problem mit fehlenden Videoempfehlungen ist noch nicht behoben;
-ein neuer Projektname verändert den von YouTube gelieferten Empfehlungsfeed nicht.
-
-## Entwicklung
-
-`build/` enthält das Build-Rezept und Prüfungen für Paket, ABI, Signatur,
-Android-Ressourcen, erhaltene Nutzdaten und Update-Auswahl.
-Der Build verwendet festgelegte, per SHA-256 geprüfte Komponenten und signiert die APK.
-Die Android-Laufzeit wird aus festgelegten Komponenten gebaut; Details stehen im Build-Rezept.
-
-Hinweise zu enthaltenen Drittkomponenten befinden sich in der APK.
+dieses Update betrifft die Darstellung und die Menüs.
