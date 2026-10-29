@@ -40,6 +40,7 @@ jobs:
           node build/test_locale.cjs output/player.js
           node build/test_feedback_menu.cjs output/player.js inputs/userScript.js
           node build/test_startup.cjs output/player.js
+          node build/test_startup_home.cjs output/player.js inputs/userScript.js
       - name: Align, sign and verify APK
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -98,6 +99,7 @@ jobs:
           - Echte armeabi-v7a-APK, Werbeblockierung und GitHub-Update-Abruf.
           - Animiertes YakuzaVideo-Logo beim Start, mindestens drei Sekunden sichtbar.
           - Eigenes App-Icon und passende TV-Startkachel.
+          - Startseite nach dem Laden der Navigation automatisch nachladen.
           - Deutsches Menü beim langen Drücken auf OK und deutsche Rückmeldungen.
           - Bereinigte Option für die Begrüßungsnachricht beim Start.
           - Mindestens Android 7 / API 24.

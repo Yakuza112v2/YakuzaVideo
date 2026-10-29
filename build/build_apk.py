@@ -159,6 +159,15 @@ def adapt_resources(data):
 
 
 def adapt_script(source):
+    early_reload = 'Ma("reloadHomeOnStartup")&&(Ma("launchToOnStartup")?po(JSON.parse(Ma("launchToOnStartup"))):po({signalAction:{signal:"SOFT_RELOAD_PAGE"}}));'
+    assert source.count(early_reload) == 1, "Unexpected startup navigation"
+    source = source.replace(early_reload, 'yvRefreshHomeOnStartup();')
+    startup_home = (Path(__file__).parent / 'startup_home.js').read_text(encoding='utf-8')
+    assert source.count('function po(e,t){') == 1
+    source = source.replace('function po(e,t){', startup_home + 'function po(e,t){')
+    guide_marker = 'if(n&&Array.isArray(a)){'
+    assert source.count(guide_marker) == 1, "Unexpected guide response hook"
+    source = source.replace(guide_marker, 'n&&(window.__yvGuideReady=true);' + guide_marker)
     menu_start = source.index('function xo(')
     menu_end = source.index('function Ao(', menu_start)
     source = source[:menu_start] + (Path(__file__).parent / 'feedback_menu.js').read_text(encoding='utf-8') + source[menu_end:]
@@ -214,7 +223,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Animiertes YakuzaVideo-Logo beim Start für mindestens drei Sekunden.","Verbessertes Videomenü und fest zugeordnete Spielerdatei pro App-Version."]}}
+        "changelog_de":["Startseite nach dem Laden der Navigation gezielt aktualisieren.","Frischen Startseiten-Abruf statt zu früher Seitenaktualisierung verwenden."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)
