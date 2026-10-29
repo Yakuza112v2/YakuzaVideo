@@ -3,6 +3,7 @@ const script = fs.readFileSync(process.argv[2], 'utf8');
 const start = script.indexOf('function xo('), end = script.indexOf('function Ao(', start);
 const translations = JSON.parse(fs.readFileSync(__dirname + '/de.json', 'utf8'));
 const context = {
+    location: {hash: "#/"}, btoa: value => Buffer.from(value, "binary").toString("base64"),
     ga: key => translations.videoMenu[key.split('.')[1]],
     qa: (label, endpoint) => ({menuServiceItemRenderer: {text: {simpleText: label}, serviceEndpoint: endpoint}}),
     bo: value => value?.simpleText || value?.runs?.map(run => run.text).join('') || '',
@@ -67,6 +68,22 @@ check('full video-card menu processing retains the feedback actions', () => {
     }};
     context.Co([item]);
     assert.deepEqual(actions(item.tileRenderer.onLongPressCommand.showMenuCommand.menu.menuRenderer.items), ['NOT_INTERESTED', 'DONT_RECOMMEND_CHANNEL']);
+});
+check('Home video without a panel command gets both options', () => {
+    const item = {lockupViewModel: {contentId: 'NO6ZB9iF8kc', rendererContext: {commandContext: {onLongPress: {innertubeCommand: {showMenuCommand: {menu: {menuRenderer: {items: []}}}}}}}}};
+    const items = []; context.xo(item, items); assert.deepEqual(actions(items), ['NOT_INTERESTED', 'DONT_RECOMMEND_CHANNEL']);
+    const params = items[0].menuServiceItemRenderer.serviceEndpoint.customAction.parameters;
+    assert.equal(params.panelId, 'PAcontext_menu');
+    // Compare against the public TV panel API integration fixture, not a guessed token.
+    assert.equal(params.params, '-golCgtOTzZaQjlpRjhrYyCeAUITCAISD0ZFd2hhdF90b193YXRjaA==');
+});
+check('fallback is video-specific and restricted to Home', () => {
+    const tile = card({}); tile.tileRenderer.contentId = 'QwGuhdnFPyo';
+    const items = []; context.xo(tile, items);
+    const decoded = Buffer.from(items[0].menuServiceItemRenderer.serviceEndpoint.customAction.parameters.params, 'base64url');
+    assert.equal(decoded.subarray(5, 16).toString(), 'QwGuhdnFPyo');
+    context.location.hash = '#/browse?c=FEsubscriptions'; const other = []; context.xo(tile, other); assert.equal(other.length, 0);
+    context.location.hash = '#/';
 });
 if (process.argv[3]) {
     const original = fs.readFileSync(process.argv[3], 'utf8');

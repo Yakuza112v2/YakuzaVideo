@@ -24,7 +24,17 @@ function xo(card, items) {
         }
         return null;
     }
-    const panel = panelFrom(command);
+    let panel = panelFrom(command);
+    // Home cards do not always carry a panel command. Request the TV context menu
+    // by video ID instead; params is a protobuf request, never a feedback token.
+    const videoId = tile ? tile.contentId : lockup && lockup.contentId;
+    const route = (location.hash || '').replace(/^#/, '');
+    const home = route === '' || route === '/' ||
+        /^\/browse\?(?:.*&)?(?:c|browseId)=FE(?:topics|what_to_watch)(?:&|$)/.test(route);
+    if (!panel && home && /^[A-Za-z0-9_-]{11}$/.test(videoId || '')) {
+        const bytes = '\xfa\x0a\x25\x0a\x0b' + videoId + '\x20\x9e\x01\x42\x13\x08\x02\x12\x0fFEwhat_to_watch';
+        panel = {panelId: 'PAcontext_menu', params: btoa(bytes).replace(/\+/g, '-').replace(/\//g, '_')};
+    }
     if (!panel) return;
     function containsAction(value, action) {
         if (!value || typeof value !== "object") return false;

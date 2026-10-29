@@ -171,6 +171,15 @@ def adapt_script(source):
     menu_start = source.index('function xo(')
     menu_end = source.index('function Ao(', menu_start)
     source = source[:menu_start] + (Path(__file__).parent / 'feedback_menu.js').read_text(encoding='utf-8') + source[menu_end:]
+    feedback_start = source.index('function lo(')
+    feedback_end = source.index('function uo(', feedback_start)
+    source = source[:feedback_start] + (Path(__file__).parent / 'feedback_request.js').read_text(encoding='utf-8') + source[feedback_end:]
+    handler_start = source.index('function mo(')
+    handler_end = source.index('function bo(', handler_start)
+    source = source[:handler_start] + (Path(__file__).parent / 'feedback_action.js').read_text(encoding='utf-8') + source[handler_end:]
+    response_hook = 'JSON.parse=function(){var e=vo.apply(this,arguments);try{'
+    assert source.count(response_hook) == 1
+    source = source.replace(response_hook, response_hook + 'yvObserveStartupBrowse(e);')
     for old, new in [(OLD_API, NEW_API), ('includes("arm64.apk")', 'includes("armeabi-v7a.apk")'), ('includes("arm.apk")', 'includes("armeabi-v7a.apk")')]:
         assert source.count(old) == 1, "Unexpected userscript update implementation"
         source = source.replace(old, new)
@@ -223,7 +232,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Startseite nach dem Laden der Navigation gezielt aktualisieren.","Frischen Startseiten-Abruf statt zu früher Seitenaktualisierung verwenden."]}}
+        "changelog_de":["Startseite beim Start über einen vollständigen Kategorienwechsel laden.","Videomenü auf der Startseite direkt abrufen, wenn Menüverweise fehlen."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)
