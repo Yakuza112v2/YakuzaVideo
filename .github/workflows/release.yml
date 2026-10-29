@@ -38,6 +38,7 @@ jobs:
           node --check output/player.js
           node build/test_updater.cjs output/player.js
           node build/test_locale.cjs output/player.js
+          node build/test_feedback_menu.cjs output/player.js inputs/userScript.js
       - name: Align, sign and verify APK
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
