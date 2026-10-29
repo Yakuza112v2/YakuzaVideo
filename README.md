@@ -1,25 +1,33 @@
 # YakuzaVideo
 
-YakuzaVideo für den Fernseher: YouTube-TV-Oberfläche, Werbeblockierung und eigene GitHub-Updates.
+YouTube auf dem Fernseher – mit Werbeblockierung, zusätzlichen Wiedergabeoptionen und Bedienung per Fernbedienung.
 
-**[YakuzaVideo-armeabi-v7a.apk herunterladen](https://github.com/Yakuza112v2/YakuzaVideo/releases/latest/download/YakuzaVideo-armeabi-v7a.apk)**
+![YakuzaVideo](assets/launcher/drawable-xhdpi-v4-banner.png)
+
+**[YakuzaVideo für armeabi-v7a herunterladen](https://github.com/Yakuza112v2/YakuzaVideo/releases/latest/download/YakuzaVideo-armeabi-v7a.apk)**
+
+## Funktionen
+
+- **Werbeblockierung:** Videowerbung blockieren.
+- **Sponsoring überspringen:** Sponsoring-Segmente, Intros und Abspänne nach deinen Einstellungen überspringen, sofern Segmentdaten vorliegen.
+- **Wiedergabe anpassen:** Geschwindigkeit und bevorzugte Videoqualität einstellen.
+- **Untertitel anpassen:** Sprache und Darstellung auswählen und die Darstellung speichern.
+- **Videos organisieren:** Warteschlange nutzen, Videos in Playlists speichern oder zu „Später ansehen“ hinzufügen.
+- **Mehr Optionen per Fernbedienung:** OK gedrückt halten, um das Videomenü mit Einträgen wie „Kein Interesse“ und „Keine Videos von diesem Kanal empfehlen“ zu öffnen.
+- **Ansicht anpassen:** Shorts und Videovorschauen ein- oder ausblenden.
+- **YouTube-Konto verwenden:** Anmelden und auf deine Abos und Playlists zugreifen.
+- **Deutsche Zusatzmenüs:** Deutsche Videooptionen und Rückmeldungen.
+- **Eigener TV-Auftritt:** YakuzaVideo-App-Icon und passende Startkachel.
+- **Updates direkt in der App:** Neue Versionen aus diesem GitHub-Repository abrufen.
 
 ## Installation
 
-Android 7 / API 24 oder neuer. APK installieren und bei YouTube anmelden.
-Die App verwendet `com.yakuza.video` und lässt sich unabhängig installieren.
-Die enthaltenen nativen Bibliotheken sind tatsächlich für `armeabi-v7a` gebaut.
+Voraussetzung: Android 7 oder neuer.
 
-## App-Icon und TV-Kachel
-
-![YakuzaVideo-TV-Kachel](assets/launcher/drawable-xhdpi-v4-banner.png)
-
-Quadratisches App-Icon und TV-Banner werden in allen fünf vorhandenen
-Auflösungen direkt in die APK eingebaut. Die Startaktivität bleibt für
-normale und TV-Launcher registriert.
+1. Die APK aus dem Download-Link herunterladen.
+2. Auf dem Fire TV oder einem kompatiblen Android-TV-Gerät installieren.
+3. YakuzaVideo öffnen und bei Bedarf bei YouTube anmelden.
 
 ## Updates
 
-Die App prüft neue Releases in diesem Repository und wählt die armeabi-v7a-APK.
-Die Installation muss am Fernseher bestätigt werden.
-Ein neues Release entsteht über den Workflow **YakuzaVideo APK**.
+Neue Versionen lassen sich über die Update-Prüfung der App oder über die [Downloads](https://github.com/Yakuza112v2/YakuzaVideo/releases/latest) beziehen. Die Installation des Updates muss am Fernseher bestätigt werden.
