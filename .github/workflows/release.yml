@@ -97,6 +97,18 @@ jobs:
           with urllib.request.urlopen(urllib.request.Request(url,data=json.dumps(data).encode(),headers=headers,method='PUT')) as response:
               assert response.status in (200,201)
           PY
+          python3 - <<'PY'
+          import hashlib,json,os,urllib.request
+          from pathlib import Path
+          path='/gh/'+os.environ['GH_REPO']+'@main/player.js'
+          with urllib.request.urlopen('https://purge.jsdelivr.net'+path,timeout=60) as response:
+              purge=json.load(response)
+          assert purge.get('status') == 'finished', 'Player cache purge did not finish'
+          with urllib.request.urlopen('https://cdn.jsdelivr.net'+path,timeout=60) as response:
+              delivered=response.read()
+          assert hashlib.sha256(delivered).digest() == hashlib.sha256(Path('release-files/player.js').read_bytes()).digest(), 'Player CDN still serves a different release'
+          print('Published player cache refreshed and checksum verified')
+          PY
           version="$(python3 -c 'import json; print(json.load(open("release-files/build.json"))["version"])')"
           cat > notes.md <<'EOF'
           YakuzaVideo für den Fernseher.
