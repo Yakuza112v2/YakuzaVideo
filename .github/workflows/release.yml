@@ -1,0 +1,115 @@
+name: YakuzaVideo APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['build/**', '.github/workflows/release.yml']
+permissions:
+  contents: read
+concurrency:
+  group: yakuzavideo-release
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
+        with:
+          java-version: '17'
+          distribution: temurin
+      - name: Download pinned originals and corresponding script source
+        run: |
+          set -euo pipefail
+          mkdir -p inputs output release-files
+          curl -fL --retry 3 'https://github.com/reisxd/TizenTubeCobalt/releases/download/v2.0.3/cobalt-arm.apk' -o inputs/cobalt-arm.apk
+          curl -fL --retry 3 'https://cdn.jsdelivr.net/npm/@foxreis/tizentube@1.15.2/dist/userScript.js' -o inputs/userScript.js
+          curl -fL --retry 3 'https://github.com/reisxd/TizenTube/archive/f99945a84ff767bf14ad8c1146e8e3fd49a3d628.tar.gz' -o release-files/TizenTube-1.15.2-source.tar.gz
+          curl -fL --retry 3 'https://raw.githubusercontent.com/reisxd/TizenTube/f99945a84ff767bf14ad8c1146e8e3fd49a3d628/LICENSE' -o release-files/TizenTube-LICENSE.txt
+      - name: Adapt and test YakuzaVideo APK and updater
+        env:
+          COBALT_ORIGINAL: inputs/cobalt-arm.apk
+          COBALT_OUTPUT: output/unsigned.apk
+          COBALT_DIRECTORY: output
+        run: |
+          python3 build/build_apk.py inputs/cobalt-arm.apk inputs/userScript.js output "$GITHUB_RUN_NUMBER"
+          python3 build/test_apk.py
+          node --check output/cobalt.js
+          node build/test_updater.cjs output/cobalt.js
+      - name: Align, sign and verify APK
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/yakuzavideo.p12"
+          tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          "$tools_dir/zipalign" -p -f 4 output/unsigned.apk output/aligned.apk
+          "$tools_dir/apksigner" sign --v4-signing-enabled false --ks-type PKCS12 --ks "$RUNNER_TEMP/yakuzavideo.p12" --ks-key-alias "$ALIAS" --ks-pass env:KEY_STORE_PASSWORD --key-pass env:KEY_PASSWORD --out release-files/YakuzaVideo-armeabi-v7a.apk output/aligned.apk
+          "$tools_dir/apksigner" verify --verbose --print-certs release-files/YakuzaVideo-armeabi-v7a.apk > output/signature.txt
+          "$tools_dir/zipalign" -c -p 4 release-files/YakuzaVideo-armeabi-v7a.apk
+          "$tools_dir/aapt" dump badging release-files/YakuzaVideo-armeabi-v7a.apk > output/badging.txt
+          python3 build/verify_android.py output/badging.txt
+          cp output/cobalt.js output/update.json output/build.json output/signature.txt output/badging.txt release-files/
+          (cd release-files && sha256sum YakuzaVideo-armeabi-v7a.apk cobalt.js update.json > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: yakuzavideo
+          path: release-files/*
+          if-no-files-found: error
+      - name: Remove signing material
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/yakuzavideo.p12"
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download verified deliverables
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh run download "$GITHUB_RUN_ID" --name yakuzavideo --dir release-files
+      - name: Publish YakuzaVideo userscript and signed release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,json,os,urllib.request,urllib.error
+          from pathlib import Path
+          url='https://api.github.com/repos/'+os.environ['GH_REPO']+'/contents/cobalt.js'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+          data={'message':'Publish verified YakuzaVideo userscript [skip ci]','branch':'main','content':base64.b64encode(Path('release-files/cobalt.js').read_bytes()).decode()}
+          try:
+              with urllib.request.urlopen(urllib.request.Request(url,headers=headers)) as response:
+                  data['sha']=json.load(response)['sha']
+          except urllib.error.HTTPError as error:
+              if error.code != 404: raise
+          with urllib.request.urlopen(urllib.request.Request(url,data=json.dumps(data).encode(),headers=headers,method='PUT')) as response:
+              assert response.status in (200,201)
+          PY
+          version="$(python3 -c 'import json; print(json.load(open("release-files/build.json"))["version"])')"
+          cat > notes.md <<'EOF'
+          YakuzaVideo für den Fernseher.
+
+          - App-Name: YakuzaVideo
+          - Eigene App-Kennung: com.yakuza.video
+          - Echte armeabi-v7a-APK, Werbeblockierung und GitHub-Update-Abruf.
+          - Mindestens Android 7 / API 24.
+
+          YakuzaVideo-armeabi-v7a.apk installieren und bei YouTube anmelden.
+          Android verlangt eine Installationsbestätigung für Updates.
+          Ein praktischer Fire-TV-Test steht aus; die gemeldeten fehlenden Empfehlungen sind noch nicht behoben.
+          Komponenten und Lizenzen: THIRD_PARTY_NOTICES.md im Repository und beigefügte Quelldateien.
+          EOF
+          gh release create "v$version" release-files/* --target "$GITHUB_SHA" --title "YakuzaVideo $version" --notes-file notes.md --latest

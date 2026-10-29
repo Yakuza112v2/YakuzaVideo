@@ -1,0 +1,7 @@
+.validation/
+inputs/
+output/
+release-files/
+__pycache__/
+*.p12
+*.keystore
