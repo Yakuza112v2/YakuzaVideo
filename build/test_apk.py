@@ -65,7 +65,14 @@ class YakuzaVideoApkTest(unittest.TestCase):
   self.assertIn("android.intent.category.LAUNCHER",categories)
   self.assertIn("android.intent.category.LEANBACK_LAUNCHER",categories)
  def test_userscript_uses_own_update_source(self):
-  script=(self.directory/"cobalt.js").read_text(encoding="utf-8")
+  script=(self.directory/"player.js").read_text(encoding="utf-8")
   self.assertIn(NEW_API,script);self.assertNotIn("api.github.com/repos/reisxd/TizenTubeCobalt/releases/latest",script)
   self.assertEqual(2,script.count('includes("armeabi-v7a.apk")'))
+ def test_interface_and_community_links_use_yakuzavideo(self):
+  script=(self.directory/"player.js").read_text(encoding="utf-8").split("\n",1)[1]
+  self.assertNotIn("TizenTube Settings",script);self.assertNotIn("TizenTube Cobalt Updater",script)
+  self.assertNotIn('{name:ga("settings.supportTT.title")',script)
+  self.assertIn('subtitle:"YakuzaVideo"',script)
+  start=script.index('[{name:"GitHub",link:');end=script.index('].map(e=>',start)+1
+  self.assertEqual('[{name:"GitHub",link:"https://github.com/Yakuza112v2/YakuzaVideo"}]',script[start:end])
 if __name__=="__main__":unittest.main()

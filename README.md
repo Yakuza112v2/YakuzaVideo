@@ -35,6 +35,6 @@ ein neuer Projektname verändert den von YouTube gelieferten Empfehlungsfeed nic
 `build/` enthält das Build-Rezept und Prüfungen für Paket, ABI, Signatur,
 Android-Ressourcen, erhaltene Nutzdaten und Update-Auswahl.
 Der Build verwendet festgelegte, per SHA-256 geprüfte Komponenten und signiert die APK.
-Die Cobalt-Binärdatei wird angepasst; Chromium wird dabei nicht neu kompiliert.
+Die Android-Laufzeit wird aus festgelegten Komponenten gebaut; Details stehen im Build-Rezept.
 
-Komponenten, Quellen und Lizenzen: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Hinweise zu enthaltenen Drittkomponenten befinden sich in der APK.

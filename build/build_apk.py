@@ -1,10 +1,10 @@
-"""YakuzaVideo adaptation of the pinned upstream APK; no Chromium recompilation.
-Modified 2026-10-29. This build recipe and adapted userscript are GPL-3.0-only.
-Upstream Cobalt/Chromium notices remain in the APK unchanged.
+"""Build YakuzaVideo from pinned Android runtime components.
+Modified 2026-10-29. Embedded third-party notices remain unchanged.
 """
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import struct
 import zipfile
@@ -15,7 +15,7 @@ PACKAGE = "com.yakuza.video"
 APK_SHA256 = "72a3527f520db3a1b414916ad96481244e451c41e272ae33344ae5e79abb37dd"
 SCRIPT_SHA256 = "7a092351e0e348507ef9c97da8833d5f6717de628517f5299053b3c2073f1d69"
 OLD_URL = b"https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js?v="
-NEW_URL = b"https://cdn.jsdelivr.net/gh/Yakuza112v2/YakuzaVideo@main/cobalt.js?v="
+NEW_URL = b"https://cdn.jsdelivr.net/gh/Yakuza112v2/YakuzaVideo@main/player.js?v="
 OLD_API = "https://api.github.com/repos/reisxd/TizenTubeCobalt/releases/latest"
 NEW_API = "https://api.github.com/repos/Yakuza112v2/YakuzaVideo/releases/latest"
 ASSET = "YakuzaVideo-armeabi-v7a.apk"
@@ -150,7 +150,20 @@ def adapt_script(source):
     for old, new in [(OLD_API, NEW_API), ('includes("arm64.apk")', 'includes("armeabi-v7a.apk")'), ('includes("arm.apk")', 'includes("armeabi-v7a.apk")')]:
         assert source.count(old) == 1, "Unexpected userscript update implementation"
         source = source.replace(old, new)
-    return "/* YakuzaVideo adaptation, 2026-10-29. GPL-3.0-only. Based on TizenTube 1.15.2 by Reis Can. Source and recipe: https://github.com/Yakuza112v2/YakuzaVideo */\n" + source
+    support = source.index('{name:ga("settings.supportTT.title")')
+    social = source.index('{name:ga("settings.options.socialMedia.title")', support)
+    source = source[:support] + source[social:]
+    social_start = source.index('[{name:"GitHub",link:')
+    social_end = source.index('].map(e=>', social_start) + 1
+    source = source[:social_start] + '[{name:"GitHub",link:"https://github.com/Yakuza112v2/YakuzaVideo"}]' + source[social_end:]
+    source = source.replace('subtitle:ga("settings.ttSettings.madeByText")', 'subtitle:"YakuzaVideo"')
+    # Rename interface labels and their matching internal keys, keeping source URLs intact.
+    parts = re.split(r'(https?://[^\s"\'`<>]+)', source)
+    for index in range(0, len(parts), 2):
+        parts[index] = parts[index].replace("TizenTube Cobalt", "YakuzaVideo").replace("TizenTubeCobalt", "YakuzaVideo").replace("TizenTube", "YakuzaVideo")
+    source = "".join(parts)
+    source = re.sub(r'madeByText:"(?:[^"\\]|\\.)*"', 'madeByText:"YakuzaVideo"', source)
+    return "/* YakuzaVideo, 2026-10-29. https://github.com/Yakuza112v2/YakuzaVideo */\n" + source
 
 
 def build(apk, script, output, run):
@@ -171,11 +184,11 @@ def build(apk, script, output, run):
                 assert len(OLD_URL) == len(NEW_URL) and data.count(OLD_URL) == 1
                 data = data.replace(OLD_URL, NEW_URL)
             target.writestr(info, data)
-    (output/"cobalt.js").write_text(adapt_script(Path(script).read_text(encoding="utf-8")), encoding="utf-8", newline="\n")
+    (output/"player.js").write_text(adapt_script(Path(script).read_text(encoding="utf-8")), encoding="utf-8", newline="\n")
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["YakuzaVideo für den Fernseher.","YouTube-TV-Oberfläche, Werbeblockierung und eigene GitHub-Updates.","Android 7 oder neuer erforderlich. Anmeldung in Cobalt erneut vornehmen."]}}
+        "changelog_de":["YakuzaVideo mit eigenem App-Icon und TV-Kachel.","Eigene Oberfläche, Werbeblockierung und GitHub-Updates.","Android 7 oder neuer erforderlich."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)
