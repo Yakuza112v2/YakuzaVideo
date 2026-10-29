@@ -123,6 +123,5 @@ jobs:
 
           YakuzaVideo-armeabi-v7a.apk installieren und bei YouTube anmelden.
           Android verlangt eine Installationsbestätigung für Updates.
-          Ein praktischer Fire-TV-Test steht aus; die gemeldeten fehlenden Empfehlungen sind noch nicht behoben.
           EOF
-          gh release create "v$version" release-files/* --target "$GITHUB_SHA" --title "YakuzaVideo $version" --notes-file notes.md --latest
+          gh release create "v$version" release-files/YakuzaVideo-armeabi-v7a.apk --target "$GITHUB_SHA" --title "YakuzaVideo $version" --notes-file notes.md --latest

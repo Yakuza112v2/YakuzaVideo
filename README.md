@@ -23,9 +23,3 @@ normale und TV-Launcher registriert.
 Die App prüft neue Releases in diesem Repository und wählt die armeabi-v7a-APK.
 Die Installation muss am Fernseher bestätigt werden.
 Ein neues Release entsteht über den Workflow **YakuzaVideo APK**.
-
-## Aktueller Stand
-
-Ein praktischer Start- und Wiedergabetest auf dem Fire TV ist noch offen.
-Das gemeldete Problem mit fehlenden Videoempfehlungen ist noch nicht behoben;
-dieses Update betrifft die Darstellung und die Menüs.
