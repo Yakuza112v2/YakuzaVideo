@@ -1,7 +1,7 @@
 import json,struct,unittest,zipfile,os
 from pathlib import Path
 from inspect_apk import manifest
-from build_apk import PACKAGE,UPSTREAM_PACKAGE,OLD_URL,NEW_URL,NEW_API,ASSET,launcher_artwork
+from build_apk import PACKAGE,UPSTREAM_PACKAGE,OLD_URL,NEW_API,ASSET,launcher_artwork,runtime_location
 class YakuzaVideoApkTest(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
@@ -28,8 +28,15 @@ class YakuzaVideoApkTest(unittest.TestCase):
   for name in dex:self.assertEqual(self.source.read(name),self.output.read(name))
  def test_native_change_is_only_script_endpoint(self):
   old=self.source.read("lib/armeabi-v7a/libchrobalt.so");new=self.output.read("lib/armeabi-v7a/libchrobalt.so")
-  self.assertEqual(old.replace(OLD_URL,NEW_URL),new);self.assertNotIn(OLD_URL,new);self.assertEqual(len(old),len(new))
+  build=json.loads((self.directory/"build.json").read_text(encoding="utf-8"))
+  url=build["scriptUrl"].encode("ascii")
+  self.assertEqual(old.replace(OLD_URL,url),new);self.assertNotIn(OLD_URL,new);self.assertEqual(len(old),len(new))
+  self.assertIn(("@v"+build["version"]+"/").encode(),url);self.assertNotIn(b"@main",url)
   n="lib/armeabi-v7a/libchrome_crashpad_handler.so";self.assertEqual(self.source.read(n),self.output.read(n))
+ def test_runtime_url_fits_later_versions(self):
+  for version in ("1.0.6","1.0.10","1.0.100","1.0.1000"):
+   name,url=runtime_location(version)
+   self.assertEqual(len(OLD_URL),len(url));self.assertIn(("@v"+version+"/"+name).encode(),url)
  def test_resource_namespace_tracks_application_id(self):
   data=self.output.read("resources.arsc");o=struct.unpack_from("<H",data,2)[0];names=[]
   while o<len(data):

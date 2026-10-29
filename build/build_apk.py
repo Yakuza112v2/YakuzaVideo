@@ -2,6 +2,7 @@
 Modified 2026-10-29. Embedded third-party notices remain unchanged.
 """
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -15,11 +16,22 @@ PACKAGE = "com.yakuza.video"
 APK_SHA256 = "72a3527f520db3a1b414916ad96481244e451c41e272ae33344ae5e79abb37dd"
 SCRIPT_SHA256 = "7a092351e0e348507ef9c97da8833d5f6717de628517f5299053b3c2073f1d69"
 OLD_URL = b"https://cdn.jsdelivr.net/npm/@foxreis/tizentube/dist/userScript.js?v="
-NEW_URL = b"https://cdn.jsdelivr.net/gh/Yakuza112v2/YakuzaVideo@main/player.js?v="
 OLD_API = "https://api.github.com/repos/reisxd/TizenTubeCobalt/releases/latest"
 NEW_API = "https://api.github.com/repos/Yakuza112v2/YakuzaVideo/releases/latest"
 ASSET = "YakuzaVideo-armeabi-v7a.apk"
 BRANDING_DIRECTORY = Path(__file__).resolve().parent.parent / "assets" / "launcher"
+
+
+def runtime_location(version):
+    prefix = 'https://cdn.jsdelivr.net/gh/Yakuza112v2/YakuzaVideo@v' + version + '/'
+    size = len(OLD_URL) - len(prefix) - len('?v=')
+    names = {7: 'main.js', 6: 'app.js', 5: 'pv.js', 4: 'p.js'}
+    if size not in names:
+        raise ValueError('Version exceeds native script URL slot')
+    name = names[size]
+    url = (prefix + name + '?v=').encode('ascii')
+    assert len(url) == len(OLD_URL)
+    return name, url
 
 
 def launcher_artwork():
@@ -173,12 +185,16 @@ def adapt_script(source):
     anchor = 'ma.init({lng:va,'
     assert source.count(anchor) == 1, "Unexpected locale initialization"
     source = source.replace(anchor, patch + anchor)
-    return "/* YakuzaVideo, 2026-10-29. https://github.com/Yakuza112v2/YakuzaVideo */\n" + source
+    intro = (Path(__file__).parent / 'startup.js').read_text(encoding='utf-8')
+    logo = (BRANDING_DIRECTORY / 'mipmap-xxxhdpi-v4-icon.png').read_bytes()
+    intro = intro.replace('__YAKUZAVIDEO_LOGO_BASE64__', base64.b64encode(logo).decode('ascii'))
+    return "/* YakuzaVideo, 2026-10-29. https://github.com/Yakuza112v2/YakuzaVideo */\n" + intro + '\n' + source
 
 
 def build(apk, script, output, run):
     verify(apk, APK_SHA256); verify(script, SCRIPT_SHA256)
     version = "1.0." + str(run); code = int(run)
+    runtime_name, runtime_url = runtime_location(version)
     output = Path(output); output.mkdir(parents=True, exist_ok=True)
     artwork = launcher_artwork()
     with zipfile.ZipFile(apk) as source, zipfile.ZipFile(output/"unsigned.apk", "w") as target:
@@ -191,16 +207,16 @@ def build(apk, script, output, run):
             elif info.filename == "resources.arsc": data = adapt_resources(data)
             elif info.filename in artwork: data = artwork[info.filename]
             elif info.filename == "lib/armeabi-v7a/libchrobalt.so":
-                assert len(OLD_URL) == len(NEW_URL) and data.count(OLD_URL) == 1
-                data = data.replace(OLD_URL, NEW_URL)
+                assert len(OLD_URL) == len(runtime_url) and data.count(OLD_URL) == 1
+                data = data.replace(OLD_URL, runtime_url)
             target.writestr(info, data)
     (output/"player.js").write_text(adapt_script(Path(script).read_text(encoding="utf-8")), encoding="utf-8", newline="\n")
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Feedback-Optionen im Videomenü einzeln erkennen und ergänzen.","Unterstützung für verschachtelte Menübefehle."]}}
+        "changelog_de":["Animiertes YakuzaVideo-Logo beim Start für mindestens drei Sekunden.","Verbessertes Videomenü und fest zugeordnete Spielerdatei pro App-Version."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
-    (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256},indent=2)+"\n",encoding="utf-8")
+    (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)
 
 if __name__ == "__main__":
