@@ -102,8 +102,9 @@ jobs:
           - Echte armeabi-v7a-APK, Werbeblockierung und GitHub-Update-Abruf.
           - Animiertes YakuzaVideo-Logo beim Start, mindestens drei Sekunden sichtbar.
           - Eigenes App-Icon und passende TV-Startkachel.
-          - Empfehlungen beim App-Start automatisch aktualisieren.
+          - Empfehlungen beim App-Start und nach Rückkehr aus dem Hintergrund aktualisieren.
           - Videomenü mit „Kein Interesse“ und „Keine Videos von diesem Kanal empfehlen“.
+          - Beschriftete Rückmeldungsgründe mit bestätigtem Versand.
           - Roter Fortschrittsbalken an angeschauten Videokacheln.
           - Angefangene Videos an der gespeicherten Stelle fortsetzen, auch nach App-Neustart.
           - Deutsches Menü beim langen Drücken auf OK und deutsche Rückmeldungen.

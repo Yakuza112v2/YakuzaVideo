@@ -180,6 +180,9 @@ def adapt_script(source):
     handler_start = source.index('function mo(')
     handler_end = source.index('function bo(', handler_start)
     source = source[:handler_start] + (Path(__file__).parent / 'feedback_action.js').read_text(encoding='utf-8') + source[handler_end:]
+    reason_handler = 'case"FEEDBACK_REASON":uo(t.token).then(()=>{po({signalAction:{signal:"POPUP_BACK"}}),Va("TizenTube",ga("toasts.feedbackSent"))}).catch(e=>console.error("TizenTube: failed to send feedback:",e));break;'
+    assert source.count(reason_handler) == 1, "Unexpected feedback reason handler"
+    source = source.replace(reason_handler, 'case"FEEDBACK_REASON":yvSendFeedbackReason(t);break;')
     response_hook = 'JSON.parse=function(){var e=vo.apply(this,arguments);try{'
     assert source.count(response_hook) == 1
     source = source.replace(response_hook, response_hook + 'yvObserveStartupBrowse(e);')
@@ -235,7 +238,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Videomenü direkt an den Startseitenkacheln vervollständigen.","Startseite mit dem originalen Aktualisieren-Befehl laden.","Fortschrittsbalken anzeigen und Videos an der gespeicherten Stelle fortsetzen."]}}
+        "changelog_de":["Rückmeldungsgründe mit Beschriftung und gültigem Rückmeldungsbefehl anzeigen.","Startseite auch beim Zurückkehren aus dem Hintergrund aktualisieren.","Fortschrittsbalken anzeigen und Videos an der gespeicherten Stelle fortsetzen."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)

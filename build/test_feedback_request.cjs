@@ -7,12 +7,12 @@ const ga = key => key === 'toasts.feedbackSent' ? 'Feedback gesendet' : translat
 function token(value) {if (!value || typeof value !== 'object') return null; if (value.feedbackToken) return value.feedbackToken; for (const child of Object.values(value)) {const found = token(child); if (found) return found;} return null;}
 function row(title, feedbackToken) {return {listItemViewModel: {title: {content: title}, rendererContext: {commandContext: {onTap: {innertubeCommand: {commandExecutorCommand: {commands: [{signalAction: {signal: 'CLOSE_POPUP'}}, {feedbackEndpoint: {feedbackToken}}]}}}}}}};}
 function environment(rows) {
-    const requests = [], sent = [], toasts = [], commands = [];
+    const requests = [], sent = [], toasts = [], commands = [], dialogs = [];
     const client = {fetch(request) {requests.push(request); return {subscribe(next) {next({content: {engagementPanelSectionListRenderer: {content: {listViewModel: {listItems: rows}}}}}); return {unsubscribe() {}};}};}};
-    const context = {window: {_yttv: {registry: {mappings: {}, get() {return client;}}}}, ga, so: token, bo: value => value.content, setTimeout, clearTimeout, console,
+    const context = {window: {_yttv: {registry: {mappings: {}, get() {return client;}}}}, ga, so: token, bo: value => !value ? '' : value.content || value.simpleText || (value.runs || []).map(r=>r.text).join(''), Ha: (label,icon,actions) => ({compactLinkRenderer:{title:{simpleText:label.title},serviceEndpoint:{commandExecutorCommand:{commands:actions}}}}), Wa: items=>({overlayPanelItemListRenderer:{items}}), ja:(title,content,id)=>dialogs.push({title,content,id}), setTimeout, clearTimeout, console,
         uo: async feedbackToken => {sent.push(feedbackToken); return {feedbackResponses: [{isProcessed: true}]};}, po: command => commands.push(command), Va: (_, text) => toasts.push(text)};
     vm.createContext(context); vm.runInContext(script.slice(start, end) + script.slice(actionStart, actionEnd), context);
-    return {context, requests, sent, toasts, commands};
+    return {context, requests, sent, toasts, commands, dialogs};
 }
 (async () => {
     const e = environment([row('Aus Wiedergabeverlauf entfernen', 'history-token'), row('Keine Videos von diesem Kanal empfehlen', 'channel-token'), row('Kein Interesse', 'interest-token')]);
@@ -23,5 +23,24 @@ function environment(rows) {
     assert.equal(missing.sent.length, 0); assert.match(missing.toasts[0], /nicht an/);
     const rejected = environment([row('Not interested', 'valid')]); rejected.context.uo = async () => ({feedbackResponses: [{isProcessed: false}]});
     await rejected.context.mo({panelId: 'PAcontext_menu', params: 'request'}, 0, false); assert.match(rejected.toasts[0], /nicht bestätigt/); assert.equal(rejected.commands.length, 0);
-    console.log('Feedback request tests passed: select by action, not position; no false success');
+    const reasons = environment([row('Kein Interesse', 'initial-token')]);
+    reasons.context.uo = async value => {reasons.sent.push(value); return {feedbackResponses:[{isProcessed:true,followUpDialog:{dismissalFollowUpRenderer:{dismissalReasonsPrompt:{runs:[{text:'Feedback senden'}]},reasons:[
+        {dismissalReasonTextRenderer:{text:{runs:[{text:'Ich habe dieses Video schon angesehen'}]},feedback:{feedbackEndpoint:{feedbackToken:'seen-token'}}}},
+        {dismissalReasonTextRenderer:{text:{runs:[{text:'Das Video gefällt mir nicht'}]},feedback:{feedbackEndpoint:{feedbackToken:'dislike-token'}}}}
+    ]}}}]};};
+    await reasons.context.mo({panelId:'PAcontext_menu',params:'request'},0,true);
+    assert.equal(reasons.dialogs.length,1); const items=reasons.dialogs[0].content.overlayPanelItemListRenderer.items;
+    assert.equal(items[0].compactLinkRenderer.title.simpleText,'Ich habe dieses Video schon angesehen');
+    assert.equal(items[1].compactLinkRenderer.title.simpleText,'Das Video gefällt mir nicht');
+    const parameters=items[1].compactLinkRenderer.serviceEndpoint.commandExecutorCommand.commands[0].customAction.parameters;
+    await reasons.context.yvSendFeedbackReason(parameters);
+    assert.deepEqual(reasons.sent,['initial-token','dislike-token'],'the selected nested token reaches YouTube');
+    assert.equal(reasons.commands.length,2,'dialog closes after confirmed initial and reason feedback');
+    await reasons.context.mo({panelId:'PAcontext_menu',params:'another-video'},0,true);
+    assert.notEqual(reasons.dialogs[0].id,reasons.dialogs[1].id,'a cached dialog must never retain another video token');
+    const before=reasons.commands.length; reasons.context.uo=async()=>({feedbackResponses:[{isProcessed:false}]});
+    await reasons.context.yvSendFeedbackReason(parameters);assert.equal(reasons.commands.length,before,'keep dialog open on rejection');assert.match(reasons.toasts.at(-1),/nicht bestätigt/);
+    const malformed=environment([row('Kein Interesse','initial')]);malformed.context.uo=async()=>({feedbackResponses:[{isProcessed:true,followUpDialog:{dismissalFollowUpRenderer:{reasons:[{dismissalReasonTextRenderer:{text:{simpleText:'Missing token'}}},{dismissalReasonTextRenderer:{feedback:{feedbackEndpoint:{feedbackToken:'missing-text'}}}}]}}}]});
+    await malformed.context.mo({panelId:'PAcontext_menu',params:'request'},0,true);assert.equal(malformed.dialogs.length,0,'never display empty or nonfunctional reason rows');
+    console.log('Feedback verified with actual TV response schema: both reason labels, selected reason token, server confirmation and malformed data');
 })().catch(error => {console.error(error); process.exitCode = 1;});
