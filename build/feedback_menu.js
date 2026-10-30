@@ -48,16 +48,27 @@ function xo(card, items) {
     ];
     for (const action of actions) {
         const labels = action.labels.concat([ga(action.key)]).map(normalized);
-        const exists = items.some(item => {
+        const existingIndex = items.findIndex(item => {
             if (containsAction(item, action.action)) return true;
             const renderer = item.menuServiceItemRenderer || item.menuNavigationItemRenderer || item.compactLinkRenderer;
             if (!renderer) return false;
             const endpoint = renderer.serviceEndpoint || renderer.navigationEndpoint;
             return !!so(endpoint) && labels.includes(normalized(bo(renderer.text || renderer.title)));
         });
-        if (!exists) items.push(qa(ga(action.key), {
+        if (existingIndex >= 0 && /^[A-Za-z0-9_-]{11}$/.test(videoId || '')) {
+            const item = items[existingIndex];
+            const renderer = item.menuServiceItemRenderer || item.menuNavigationItemRenderer || item.compactLinkRenderer;
+            if (renderer) {
+                const endpointKey = renderer.navigationEndpoint ? 'navigationEndpoint' : 'serviceEndpoint';
+                const endpoint = renderer[endpointKey];
+                const existingAction = endpoint && (endpoint.customAction || endpoint.playlistEditEndpoint && endpoint.playlistEditEndpoint.customAction);
+                if (existingAction && existingAction.action === action.action && existingAction.parameters) existingAction.parameters.videoId = videoId;
+                else renderer[endpointKey] = {clickTrackingParams: null, playlistEditEndpoint: {customAction: {action: action.action, parameters: {...panel, videoId}}}};
+            }
+        }
+        if (existingIndex < 0) items.push(qa(ga(action.key), {
             clickTrackingParams: null,
-            playlistEditEndpoint: {customAction: {action: action.action, parameters: panel}}
+            playlistEditEndpoint: {customAction: {action: action.action, parameters: {...panel, videoId}}}
         }));
     }
 }

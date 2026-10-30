@@ -85,6 +85,12 @@ check('fallback is video-specific and restricted to Home', () => {
     context.location.hash = '#/browse?c=FEsubscriptions'; const other = []; context.xo(tile, other); assert.equal(other.length, 0);
     context.location.hash = '#/';
 });
+check('real video ID follows native and custom feedback entries', () => {
+    const value=card(panel());value.tileRenderer.contentId='fixture0001';
+    const items=[native('Kein Interesse','native-token')];context.xo(value,items);
+    assert.equal(items[0].menuServiceItemRenderer.serviceEndpoint.playlistEditEndpoint.customAction.parameters.videoId,'fixture0001');
+    assert.equal(items[1].menuServiceItemRenderer.serviceEndpoint.playlistEditEndpoint.customAction.parameters.videoId,'fixture0001');
+});
 if (process.argv[3]) {
     const original = fs.readFileSync(process.argv[3], 'utf8');
     const a = original.indexOf('function xo('), b = original.indexOf('function Ao(', a);

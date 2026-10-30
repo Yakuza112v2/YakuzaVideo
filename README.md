@@ -19,6 +19,7 @@ YouTube auf dem Fernseher – mit Werbeblockierung, zusätzlichen Wiedergabeopti
 - **Wiedergabefortschritt:** Roter Fortschrittsbalken an angeschauten Videokacheln.
 - **Videos fortsetzen:** Angefangene Videos an der gespeicherten Stelle weitersehen, auch nach einem App-Neustart.
 - **Empfehlungen:** Startseite beim Öffnen automatisch aktualisieren.
+- **Empfehlungen bereinigen:** Abgelehnte Videos nach bestätigter Rückmeldung an YouTube ausblenden und für das jeweilige Profil dauerhaft aus den Empfehlungen filtern.
 - **Videomenü per Fernbedienung:** OK gedrückt halten für „Kein Interesse“ und „Keine Videos von diesem Kanal empfehlen“.
 - **Deutsche Zusatzmenüs:** Deutsche Videooptionen und Rückmeldungen.
 - **Eigener TV-Auftritt:** YakuzaVideo-App-Icon und passende Startkachel.

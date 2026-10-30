@@ -42,6 +42,7 @@ jobs:
           node build/test_feedback_request.cjs output/player.js
           node build/test_feedback_ui.cjs output/player.js
           node build/test_watch_status.cjs output/player.js
+          node build/test_dismissed_videos.cjs
           node build/test_startup.cjs output/player.js
           node build/test_startup_home.cjs output/player.js inputs/userScript.js
       - name: Align, sign and verify APK
@@ -104,7 +105,8 @@ jobs:
           - Eigenes App-Icon und passende TV-Startkachel.
           - Empfehlungen beim App-Start und nach Rückkehr aus dem Hintergrund aktualisieren.
           - Videomenü mit „Kein Interesse“ und „Keine Videos von diesem Kanal empfehlen“.
-          - Beschriftete Rückmeldungsgründe mit bestätigtem Versand.
+          - „Schon angesehen“ und „Gefällt mir nicht“ an YouTube senden.
+          - Abgelehnte Videos sofort ausblenden und nach Aktualisieren oder Neustart je Profil aus den Empfehlungen filtern.
           - Roter Fortschrittsbalken an angeschauten Videokacheln.
           - Angefangene Videos an der gespeicherten Stelle fortsetzen, auch nach App-Neustart.
           - Deutsches Menü beim langen Drücken auf OK und deutsche Rückmeldungen.

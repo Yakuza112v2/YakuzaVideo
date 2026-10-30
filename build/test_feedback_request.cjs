@@ -42,5 +42,24 @@ function environment(rows) {
     await reasons.context.yvSendFeedbackReason(parameters);assert.equal(reasons.commands.length,before,'keep dialog open on rejection');assert.match(reasons.toasts.at(-1),/nicht bestätigt/);
     const malformed=environment([row('Kein Interesse','initial')]);malformed.context.uo=async()=>({feedbackResponses:[{isProcessed:true,followUpDialog:{dismissalFollowUpRenderer:{reasons:[{dismissalReasonTextRenderer:{text:{simpleText:'Missing token'}}},{dismissalReasonTextRenderer:{feedback:{feedbackEndpoint:{feedbackToken:'missing-text'}}}}]}}}]});
     await malformed.context.mo({panelId:'PAcontext_menu',params:'request'},0,true);assert.equal(malformed.dialogs.length,0,'never display empty or nonfunctional reason rows');
-    console.log('Feedback verified with actual TV response schema: both reason labels, selected reason token, server confirmation and malformed data');
+    // Exercise the real HTTP request builder, not a mock of uo.
+    for (const [index,expected] of [[0,'seen-token'],[1,'dislike-token']]) {
+        const live=environment([row('Kein Interesse','initial-token')]);const hidden=[];let profile='profileA',reject=false;
+        live.context.window.__yvDismissedVideos={context:async()=>profile,add:(id,scope)=>{hidden.push({id,scope});return true;},refresh(){}};
+        live.context.window._yttv.registry.get=()=>({fetch(request){live.requests.push(request);return {subscribe(next){
+            if(request.path==='/youtubei/v1/get_panel') next({content:{engagementPanelSectionListRenderer:{content:{listViewModel:{listItems:[row('Kein Interesse','initial-token')]}}}}});
+            else next({feedbackResponses:[{isProcessed:!reject,followUpDialog:{dismissalFollowUpRenderer:{reasons:[
+                {dismissalReasonTextRenderer:{text:{simpleText:'Ich habe dieses Video schon angesehen'},feedback:{feedbackEndpoint:{feedbackToken:'seen-token'}}}},
+                {dismissalReasonTextRenderer:{text:{simpleText:'Das Video gefällt mir nicht'},feedback:{feedbackEndpoint:{feedbackToken:'dislike-token'}}}}
+            ]}}}]});return {unsubscribe(){}};}};}});
+        const sendStart=script.indexOf('function uo('),sendEnd=script.indexOf('function co(',sendStart);vm.runInContext(script.slice(sendStart,sendEnd),live.context);
+        await live.context.mo({panelId:'PAcontext_menu',params:'server-params',videoId:'fixture0001'},0,true);
+        assert.equal(hidden.length,1,'only confirmed initial feedback dismisses the video');assert.equal(hidden[0].id,'fixture0001');
+        const selected=live.dialogs[0].content.overlayPanelItemListRenderer.items[index].compactLinkRenderer.serviceEndpoint.commandExecutorCommand.commands[0].customAction.parameters;
+        await live.context.yvSendFeedbackReason(selected);
+        const requests=live.requests.filter(r=>r.path==='/youtubei/v1/feedback');assert.deepEqual(Array.from(requests[0].payload.feedbackTokens),['initial-token']);assert.deepEqual(Array.from(requests[1].payload.feedbackTokens),[expected]);
+        assert.equal(hidden.length,2);profile='profileB';const count=live.requests.length;await live.context.yvSendFeedbackReason(selected);assert.equal(live.requests.length,count,'never send A reason under B profile');
+        profile='profileA';reject=true;const rejectedCount=hidden.length;await live.context.mo({panelId:'PAcontext_menu',params:'request',videoId:'fixture0002'},0,true);assert.equal(hidden.length,rejectedCount,'do not falsely hide an unconfirmed rejection');
+    }
+    console.log('Both reasons verified through real /youtubei/v1/feedback builder: exact selected token, server acknowledgement, dismissal on success and profile isolation');
 })().catch(error => {console.error(error); process.exitCode = 1;});

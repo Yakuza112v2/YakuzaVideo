@@ -173,7 +173,8 @@ def adapt_script(source):
     source = source[:menu_start] + (Path(__file__).parent / 'feedback_menu.js').read_text(encoding='utf-8') + source[menu_end:]
     ui = (Path(__file__).parent / 'feedback_ui.js').read_text(encoding='utf-8-sig')
     watch_status = (Path(__file__).parent / 'watch_status.js').read_text(encoding='utf-8-sig')
-    source = source.replace('function Ao(', ui + '\nyvInstallFeedbackUi(Co,xo,ga,so);\n' + watch_status + '\nyvInstallWatchStatus();\nfunction Ao(', 1)
+    dismissed = (Path(__file__).parent / 'dismissed_videos.js').read_text(encoding='utf-8-sig')
+    source = source.replace('function Ao(', ui + '\nyvInstallFeedbackUi(Co,xo,ga,so);\n' + dismissed + '\nyvInstallDismissedVideos();\n' + watch_status + '\nyvInstallWatchStatus();\nfunction Ao(', 1)
     feedback_start = source.index('function lo(')
     feedback_end = source.index('function uo(', feedback_start)
     source = source[:feedback_start] + (Path(__file__).parent / 'feedback_request.js').read_text(encoding='utf-8') + source[feedback_end:]
@@ -185,7 +186,7 @@ def adapt_script(source):
     source = source.replace(reason_handler, 'case"FEEDBACK_REASON":yvSendFeedbackReason(t);break;')
     response_hook = 'JSON.parse=function(){var e=vo.apply(this,arguments);try{'
     assert source.count(response_hook) == 1
-    source = source.replace(response_hook, response_hook + 'yvObserveStartupBrowse(e);')
+    source = source.replace(response_hook, response_hook + 'yvObserveStartupBrowse(e);if(window.__yvDismissedVideos)window.__yvDismissedVideos.filter(e);')
     for old, new in [(OLD_API, NEW_API), ('includes("arm64.apk")', 'includes("armeabi-v7a.apk")'), ('includes("arm.apk")', 'includes("armeabi-v7a.apk")')]:
         assert source.count(old) == 1, "Unexpected userscript update implementation"
         source = source.replace(old, new)
@@ -238,7 +239,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Rückmeldungsgründe mit Beschriftung und gültigem Rückmeldungsbefehl anzeigen.","Startseite auch beim Zurückkehren aus dem Hintergrund aktualisieren.","Fortschrittsbalken anzeigen und Videos an der gespeicherten Stelle fortsetzen."]}}
+        "changelog_de":["Abgelehnte Videos nach bestätigter Rückmeldung an YouTube dauerhaft aus Empfehlungen filtern.","Startseite auch beim Zurückkehren aus dem Hintergrund aktualisieren.","Fortschrittsbalken anzeigen und Videos an der gespeicherten Stelle fortsetzen."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)
