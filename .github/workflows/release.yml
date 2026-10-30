@@ -36,10 +36,13 @@ jobs:
           python3 build/build_apk.py inputs/cobalt-arm.apk inputs/userScript.js output "$GITHUB_RUN_NUMBER"
           python3 build/test_apk.py
           node --check output/player.js
+          node build/test_initialization.cjs output/player.js
+          node build/test_home_bootstrap.cjs output/player.js
           node build/test_updater.cjs output/player.js
           node build/test_locale.cjs output/player.js
           node build/test_feedback_menu.cjs output/player.js inputs/userScript.js
           node build/test_feedback_request.cjs output/player.js
+          node build/test_feedback_post.cjs output/player.js
           node build/test_feedback_ui.cjs output/player.js
           node build/test_watch_status.cjs output/player.js
           node build/test_dismissed_videos.cjs

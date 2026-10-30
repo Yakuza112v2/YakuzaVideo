@@ -6,7 +6,7 @@ function yvInstallBrowseSettings() {
     function home() {const route=(location.hash||'').replace(/^#/,'');return route===''||route==='/'||/^\/browse\?(?:.*&)?(?:c|browseId)=FE(?:topics|what_to_watch)(?:&|$)/.test(route);}
     function apply() {
         timer=null;if(!pending||!home())return;
-        if(document.querySelector('ytlr-overlay-panel-renderer, ytlr-menu-renderer')){timer=setTimeout(apply,500);return;}
+        if(yvHasOpenDialog()){timer=setTimeout(apply,500);return;}
         const command=yvHomeRefreshCommand();
         if(command){pending=false;po(command);}else if(++attempts<40)timer=setTimeout(apply,500);
     }

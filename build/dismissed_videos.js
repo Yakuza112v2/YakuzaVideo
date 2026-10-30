@@ -13,7 +13,7 @@ function yvInstallDismissedVideos() {
     function blockedEntry(value) {
         if (!value || typeof value !== 'object') return false;
         const card = value.tileRenderer || value.lockupViewModel;
-        return !!(card && blocked.has(card.contentId) && (!card.contentType || card.contentType === 'TILE_CONTENT_TYPE_VIDEO'));
+        return !!(card && blocked.has(card.contentId) && (!card.contentType || ['TILE_CONTENT_TYPE_VIDEO', 'LOCKUP_CONTENT_TYPE_VIDEO'].includes(card.contentType)));
     }
     function prune(value, seen = new WeakSet()) {
         if (!value || typeof value !== 'object' || seen.has(value)) return;
@@ -86,14 +86,17 @@ function yvInstallDismissedVideos() {
             refreshTimer = null;
             if (!home() || scope && scope !== activeScope || ++attempts > 240) return;
             // The user owns the open reason dialog: never close it to refresh Home.
-            if (document.querySelector('ytlr-overlay-panel-renderer, ytlr-menu-renderer')) {refreshTimer = setTimeout(poll, 500); return;}
+            if (yvHasOpenDialog()) {refreshTimer = setTimeout(poll, 500); return;}
             const command = yvHomeRefreshCommand();
             if (command) po(command);
         }
         refreshTimer = setTimeout(poll, 500);
     }
     window.__yvDismissedVideos = {context, add, filter, render, refresh};
-    if (document.body) new MutationObserver(schedule).observe(document.body, {subtree: true, childList: true});
+    let observedBody;
+    function observeBody() {if (document.body && document.body !== observedBody) {observedBody = document.body; new MutationObserver(schedule).observe(document.body, {subtree:true, childList:true});} schedule();}
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', observeBody, {once:true});
+    observeBody();
     window.addEventListener('hashchange', schedule);
     async function checkProfile() {
         if (!checking) {

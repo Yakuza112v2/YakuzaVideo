@@ -179,6 +179,9 @@ def adapt_script(source):
     feedback_start = source.index('function lo(')
     feedback_end = source.index('function uo(', feedback_start)
     source = source[:feedback_start] + (Path(__file__).parent / 'feedback_request.js').read_text(encoding='utf-8') + source[feedback_end:]
+    post_start = source.index('function uo(')
+    post_end = source.index('function co(', post_start)
+    source = source[:post_start] + (Path(__file__).parent / 'feedback_post.js').read_text(encoding='utf-8') + source[post_end:]
     handler_start = source.index('function mo(')
     handler_end = source.index('function bo(', handler_start)
     source = source[:handler_start] + (Path(__file__).parent / 'feedback_action.js').read_text(encoding='utf-8') + source[handler_end:]
@@ -196,8 +199,29 @@ def adapt_script(source):
         source = source.replace(old, new)
     assert source.count('videoPreferredCodec:"any"') == 1
     source = source.replace('videoPreferredCodec:"any"', 'preferredVideoCodec:"any"')
-    assert source.count('function Ao(e){return e.filter(') == 1
-    source = source.replace('function Ao(e){return e.filter(', 'function Ao(e){if(!Ma("enableHideWatchedVideos"))return e;return e.filter(', 1)
+    config_read = 'try{za=JSON.parse(window.localStorage[Ba])}'
+    assert source.count(config_read) == 1
+    source = source.replace(config_read, 'try{za=JSON.parse(window.localStorage[Ba]);if(!za||typeof za!=="object"||Array.isArray(za))throw new Error("Invalid settings")}', 1)
+    assert source.count('za=Oa}function Ma(') == 1
+    source = source.replace('za=Oa}function Ma(', 'za=JSON.parse(JSON.stringify(Oa))}function Ma(', 1)
+    config_write = 'window.localStorage[Ba]=JSON.stringify(za),Ra.dispatchEvent('
+    assert source.count(config_write) == 1
+    source = source.replace(config_write, 'function(){try{window.localStorage[Ba]=JSON.stringify(za)}catch(error){console.error("YakuzaVideo: Einstellungen konnten nicht gespeichert werden",error)}}(),Ra.dispatchEvent(', 1)
+    services_start = source.index('function Na(')
+    services_end = source.index('"complete"===document.readyState?Na()', services_start)
+    source = source[:services_start] + (Path(__file__).parent / 'player_services.js').read_text(encoding='utf-8') + source[services_end:]
+    player_gate = 'var Fo,No=setInterval(()=>{document.querySelector("video")&&('
+    assert source.count(player_gate) == 1
+    source = source.replace(player_gate, 'var Fo,No=setInterval(()=>{(document.body&&document.head&&window.__spatialNavigation__&&Object.values(window._yttv||{}).some(service=>service&&service.instance&&typeof service.instance.resolveCommand==="function"))&&(', 1)
+    recurring = 'function jo(e){var t=JSON.parse(localStorage["yt.leanback.default::recurring_actions"]),i='
+    assert source.count(recurring) == 1
+    source = source.replace(recurring, 'function jo(e){var t;try{t=JSON.parse(localStorage["yt.leanback.default::recurring_actions"])}catch(error){return}if(!t||!t.data||!t.data.data)return;var i=', 1)
+    player_container = 'document.querySelector("ytlr-player-container").style.removeProperty("z-index")'
+    assert source.count(player_container) == 1
+    source = source.replace(player_container, 'function(){var container=document.querySelector("ytlr-player-container");if(container)container.style.removeProperty("z-index")}()', 1)
+    watched_start = source.index('function Ao(')
+    watched_end = source.index('var Do=', watched_start)
+    source = source[:watched_start] + (Path(__file__).parent / 'watched_filter.js').read_text(encoding='utf-8') + source[watched_end:]
     config_error = 'try{t.call(this,e)}catch(e){}'
     assert source.count(config_error) == 1, "Unexpected settings dispatcher"
     source = source.replace(config_error, 'try{t.call(this,e)}catch(e){console.error("YakuzaVideo: Einstellung konnte nicht angewendet werden",e)}')

@@ -36,6 +36,7 @@ function yvInstallDeArrow() {
                 record.state='error';record.retryAt=Date.now()+30000;status.state='error';
                 console.error('YakuzaVideo: DeArrow request failed',error);
                 if (!status.errorShown) {status.errorShown=true;Va('DeArrow','Titel und Vorschaubilder konnten nicht geladen werden. Ein neuer Versuch folgt automatisch.');}
+                setTimeout(schedule,30000);
             }).finally(() => {clearTimeout(timeout);active--;schedule();pump();});
         }
     }
@@ -80,7 +81,7 @@ function yvInstallDeArrow() {
             const header=tile.querySelector('ytlr-tile-header-renderer');let image=tile.querySelector('.yakuzavideo-dearrow-image');
             if(result.thumbnailUrl&&header) {
                 if(!image){image=document.createElement('img');image.onload=()=>{image.style.visibility='visible';};image.onerror=()=>{const url=image.getAttribute('src');if(url)failedImages.set(url,Date.now()+30000);status.imageErrors=(status.imageErrors||0)+1;if(!status.imageErrorShown){status.imageErrorShown=true;Va('DeArrow','Ein Vorschaubild konnte nicht geladen werden. Das ursprüngliche Bild bleibt erhalten.');}schedule();};image.className='yakuzavideo-dearrow-image';image.alt='';Object.assign(image.style,{position:'absolute',inset:'0',width:'100%',height:'100%',objectFit:'cover',pointerEvents:'none',zIndex:'1',visibility:'hidden'});header.style.position='relative';header.appendChild(image);}
-                if(image.getAttribute('src')!==result.thumbnailUrl)image.setAttribute('src',result.thumbnailUrl);thumbnails++;
+                if(image.getAttribute('src')!==result.thumbnailUrl){image.style.visibility='hidden';image.setAttribute('src',result.thumbnailUrl);}thumbnails++;
             } else if(image)image.remove();
         }
         status.titles=titles;status.thumbnails=thumbnails;

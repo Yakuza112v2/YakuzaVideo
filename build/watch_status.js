@@ -2,8 +2,9 @@ function yvInstallWatchStatus() {
     if (window.__yvWatchStatusInstalled) return;
     window.__yvWatchStatusInstalled = true;
     const watched = new Map(), positions = new Map();
+    window.__yvWatchStatus = {percent: id => watched.get(id)};
     let storageKey, saveTimer, activeVideoId, resumeAttempted = false;
-    let client, identityService, accountKey, fetching = false, renderTimer, lastFetch = 0;
+    let client, identityService, accountKey, accountGeneration = 0, fetching = false, renderTimer, lastFetch = 0;
     function onWatchPage() {return /^#\/watch\?/.test(location.hash || '');}
     function percentOf(card) {
         let percent = null;
@@ -31,7 +32,8 @@ function yvInstallWatchStatus() {
         const key = identity && [identity.ownerObfuscatedGaiaId, identity.effectiveObfuscatedGaiaId].join(':');
         if (accountKey === key && storageKey) return;
         savePositions(); watched.clear(); positions.clear();
-        accountKey = key; storageKey = 'yakuzavideo.playback.v1:' + (key || 'signed-out');
+        accountKey = key; accountGeneration++; activeVideoId = null; resumeAttempted = false;
+        storageKey = 'yakuzavideo.playback.v1:' + (key || 'signed-out');
         try {
             const entries = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (Array.isArray(entries)) for (const [id, state] of entries) {
@@ -64,7 +66,8 @@ function yvInstallWatchStatus() {
             if (state) {
                 const seconds = state.percent >= 100 ? 0 : state.seconds;
                 applyPosition(card.onSelectCommand, card.contentId, seconds);
-                const items = card.onLongPressCommand && card.onLongPressCommand.showMenuCommand && card.onLongPressCommand.showMenuCommand.menu.menuRenderer.items || [];
+                const menu = card.onLongPressCommand && card.onLongPressCommand.showMenuCommand && card.onLongPressCommand.showMenuCommand.menu;
+                const items = menu && menu.menuRenderer && menu.menuRenderer.items || [];
                 for (const item of items) if (item.menuNavigationItemRenderer) applyPosition(item.menuNavigationItemRenderer, card.contentId, seconds);
             }
             const percent = watched.get(card.contentId);
@@ -114,28 +117,35 @@ function yvInstallWatchStatus() {
     function fetchHistory(force) {
         if (!client || fetching || onWatchPage() || (!force && Date.now() - lastFetch < 15000)) return;
         fetching = true; lastFetch = Date.now();
-        let pages = 0, timeout;
-        function finish() {clearTimeout(timeout); fetching = false;}
+        let pages = 0, timeout, subscription, finished = false, generation;
+        function finish() {if (finished) return; finished = true; clearTimeout(timeout); if (subscription && subscription.unsubscribe) subscription.unsubscribe(); fetching = false;}
         function page(payload) {
+            clearTimeout(timeout);
             timeout = setTimeout(finish, 10000);
             try {
-                client.fetch({path: '/youtubei/v1/browse', payload}).subscribe(response => {
+                subscription = client.fetch({path: '/youtubei/v1/browse', payload}).subscribe(response => {
+                    if (finished) return;
+                    if (generation !== accountGeneration) {finish(); fetchHistory(true); return;}
                     clearTimeout(timeout);
                     const next = historyPage(response);
                     if (next && ++pages < 8) page({continuation: next}); else finish();
                 }, finish);
+                if (finished && subscription && subscription.unsubscribe) subscription.unsubscribe();
             } catch (error) {finish();}
         }
         function start(identity) {
+            if (finished) return;
             selectAccount(identity);
+            generation = accountGeneration;
             page({browseId: 'FEhistory'});
         }
-        if (identityService) Promise.resolve(identityService.get()).then(start, finish); else start(null);
+        timeout = setTimeout(finish, 10000);
+        if (identityService) Promise.resolve().then(() => identityService.get()).then(start, finish); else start(null);
     }
     function watchId() {const match = /[?&]v=([A-Za-z0-9_-]{11})(?:&|$)/.exec(location.hash || ''); return onWatchPage() && match ? match[1] : null;}
     function restorePlayback(event) {
         const id = watchId(), video = event.target;
-        if (!id || !video || video.tagName !== 'VIDEO') return false;
+        if (!id || !video || video.tagName !== 'VIDEO' || video.closest && video.closest('ytlr-playback-preview')) return false;
         if (activeVideoId !== id) {activeVideoId = id; resumeAttempted = false;}
         if (resumeAttempted || !Number.isFinite(video.duration) || video.duration <= 0) return false;
         const state = positions.get(id);
@@ -149,7 +159,7 @@ function yvInstallWatchStatus() {
     function recordPlayback(event) {
         if (!onWatchPage()) return; // Home previews must never mark videos as watched.
         const video = event.target, id = watchId();
-        if (!id || !video || video.tagName !== 'VIDEO') return;
+        if (!id || !video || video.tagName !== 'VIDEO' || video.closest && video.closest('ytlr-playback-preview')) return;
         if (restorePlayback(event)) return;
         if (!Number.isFinite(video.duration) || video.duration <= 0 || video.currentTime < 5) return;
         const percent = event.type === 'ended' ? 100 : Math.min(99, video.currentTime / video.duration * 100);
@@ -161,7 +171,19 @@ function yvInstallWatchStatus() {
     for (const type of ['timeupdate', 'pause', 'ended']) document.addEventListener(type, recordPlayback, true);
     window.addEventListener('hashchange', () => {activeVideoId = null; resumeAttempted = false; savePositions(); scheduleRender(); if (!onWatchPage()) setTimeout(() => fetchHistory(true), 1500);});
     window.addEventListener('pagehide', savePositions);
-    if (document.body) new MutationObserver(scheduleRender).observe(document.body, {subtree: true, childList: true});
+    let observedBody;
+    function observeBody() {if (document.body && document.body !== observedBody) {observedBody = document.body; new MutationObserver(scheduleRender).observe(document.body, {subtree: true, childList: true});} scheduleRender();}
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', observeBody, {once:true});
+    observeBody();
+    let checkingIdentity = false;
+    async function checkIdentity() {
+        if (identityService && !checkingIdentity) {
+            checkingIdentity = true;
+            try {const identity = await identityService.get(); const previous = accountKey; selectAccount(identity); if (previous !== accountKey && !onWatchPage()) fetchHistory(true);} catch (error) {} finally {checkingIdentity = false;}
+        }
+        setTimeout(checkIdentity, 2000);
+    }
+    checkIdentity();
     let attempts = 0;
     function attach() {
         for (const service of Object.values(window._yttv || {})) {
