@@ -43,6 +43,9 @@ jobs:
           node build/test_feedback_ui.cjs output/player.js
           node build/test_watch_status.cjs output/player.js
           node build/test_dismissed_videos.cjs
+          node build/test_sponsorblock.cjs output/player.js
+          node build/test_dearrow.cjs output/player.js
+          node build/test_settings_apply.cjs output/player.js
           node build/test_startup.cjs output/player.js
           node build/test_startup_home.cjs output/player.js inputs/userScript.js
       - name: Align, sign and verify APK
@@ -101,6 +104,9 @@ jobs:
           - App-Name: YakuzaVideo
           - Eigene App-Kennung: com.yakuza.video
           - Echte armeabi-v7a-APK, Werbeblockierung und GitHub-Update-Abruf.
+          - SponsorBlock mit Übernahme geänderter Einstellungen beim laufenden Video.
+          - DeArrow-Titel und Vorschaubilder mit sofortiger Ein-/Ausschaltung.
+          - Statusanzeige für geladene Segmentdaten und angewendete Titel/Bilder.
           - Animiertes YakuzaVideo-Logo beim Start, mindestens drei Sekunden sichtbar.
           - Eigenes App-Icon und passende TV-Startkachel.
           - Empfehlungen beim App-Start und nach Rückkehr aus dem Hintergrund aktualisieren.

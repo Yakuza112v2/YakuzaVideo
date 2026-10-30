@@ -1,0 +1,15 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const script=fs.readFileSync(process.argv[2],'utf8'),code=fs.readFileSync(__dirname+'/settings_apply.js','utf8');
+let modal=true,ready=true,timerId=0;const events={},timers=new Map(),commands=[],location={hash:'#/'};
+const context={window:{addEventListener:(n,f)=>events[n]=f},location,document:{querySelector:()=>modal?{}:null},Ra:{addEventListener:(n,f)=>events.config=f},yvHomeRefreshCommand:()=>ready?{nativeHomeRefresh:true}:null,po:c=>commands.push(c),setTimeout:(f,ms)=>{const id=++timerId;timers.set(id,f);return id;},clearTimeout:id=>timers.delete(id)};
+vm.createContext(context);vm.runInContext(code,context);
+function tick(){const batch=[...timers];timers.clear();for(const[,f]of batch)f();}
+events.config({detail:{key:'enableShorts',value:false}});tick();assert.equal(commands.length,0,'do not close the user settings dialog');modal=false;tick();assert.equal(commands.length,1,'parser settings fetch a new Home model after closing settings');
+events.config({detail:{key:'enableClock',value:false}});tick();assert.equal(commands.length,1,'unrelated native setting must not reload Home');
+location.hash='#/watch?v=fixture0001';events.config({detail:{key:'hideWatchedVideosThreshold',value:90}});tick();assert.equal(commands.length,1,'never restart or navigate away from playback');location.hash='#/';events.hashchange();tick();assert.equal(commands.length,2);
+ready=false;events.config({detail:{key:'enableHqThumbnails',value:true}});tick();assert.equal(commands.length,2);ready=true;tick();assert.equal(commands.length,3,'wait for original native Refresh command');
+const begin=script.indexOf('function Ao('),end=script.indexOf('var Do=',begin);let enabled=false;
+const filterContext={location:{hash:'#/'},Ma:key=>key==='enableHideWatchedVideos'?enabled:key==='hideWatchedVideosPages'?['home']:80};vm.createContext(filterContext);vm.runInContext(script.slice(begin,end),filterContext);
+const cards=[100,20].map(percent=>({tileRenderer:{header:{tileHeaderRenderer:{thumbnailOverlays:[{thumbnailOverlayResumePlaybackRenderer:{percentDurationWatched:percent}}]}}}}));assert.equal(filterContext.Ao(cards).length,2,'off switch must override previously configured pages');enabled=true;assert.equal(filterContext.Ao(cards).length,1);enabled=false;assert.equal(filterContext.Ao(cards).length,2);
+const a=script.indexOf('Oa={')+3,b=script.indexOf(';try{za=',a),defaults=vm.runInNewContext('('+script.slice(a,b)+')',{window:{h5vcc:true}});assert.equal(defaults.preferredVideoCodec,'any');assert.equal('videoPreferredCodec' in defaults,false);const literalReads=[...script.matchAll(/Ma\((['"])([^'"]+)\1\)/g)].map(m=>m[2]);assert.deepEqual([...new Set(literalReads.filter(key=>!(key in defaults)))],[],'every literal settings read must have a default');
+console.log('Settings application verified: native refresh after dialog close, no playback interruption, delayed data, watched-filter off switch and consistent codec default');

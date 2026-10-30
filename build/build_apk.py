@@ -164,7 +164,8 @@ def adapt_script(source):
     source = source.replace(early_reload, 'yvRefreshHomeOnStartup();')
     startup_home = (Path(__file__).parent / 'startup_home.js').read_text(encoding='utf-8')
     assert source.count('function po(e,t){') == 1
-    source = source.replace('function po(e,t){', startup_home + 'function po(e,t){')
+    settings_apply = (Path(__file__).parent / 'settings_apply.js').read_text(encoding='utf-8-sig')
+    source = source.replace('function po(e,t){', startup_home + settings_apply + 'function po(e,t){')
     guide_marker = 'if(n&&Array.isArray(a)){'
     assert source.count(guide_marker) == 1, "Unexpected guide response hook"
     source = source.replace(guide_marker, 'n&&(window.__yvGuideReady=true);' + guide_marker)
@@ -184,6 +185,22 @@ def adapt_script(source):
     reason_handler = 'case"FEEDBACK_REASON":uo(t.token).then(()=>{po({signalAction:{signal:"POPUP_BACK"}}),Va("TizenTube",ga("toasts.feedbackSent"))}).catch(e=>console.error("TizenTube: failed to send feedback:",e));break;'
     assert source.count(reason_handler) == 1, "Unexpected feedback reason handler"
     source = source.replace(reason_handler, 'case"FEEDBACK_REASON":yvSendFeedbackReason(t);break;')
+    dearrow_start = source.index('function To(')
+    dearrow_end = source.index('function wo(', dearrow_start)
+    source = source[:dearrow_start] + (Path(__file__).parent / 'dearrow.js').read_text(encoding='utf-8-sig') + source[dearrow_end:]
+    sponsor_start = source.index('class Po{')
+    sponsor_end = source.index('var zo;', sponsor_start)
+    source = source[:sponsor_start] + (Path(__file__).parent / 'sponsorblock.js').read_text(encoding='utf-8-sig') + source[sponsor_end:]
+    for old, new in [('subtitle:"https://sponsor.ajay.app/"', 'subtitle:yvFeatureSummary("sponsorblock")'), ('subtitle:"https://dearrow.ajay.app/"', 'subtitle:yvFeatureSummary("dearrow")')]:
+        assert source.count(old) == 1, "Unexpected feature settings header"
+        source = source.replace(old, new)
+    assert source.count('videoPreferredCodec:"any"') == 1
+    source = source.replace('videoPreferredCodec:"any"', 'preferredVideoCodec:"any"')
+    assert source.count('function Ao(e){return e.filter(') == 1
+    source = source.replace('function Ao(e){return e.filter(', 'function Ao(e){if(!Ma("enableHideWatchedVideos"))return e;return e.filter(', 1)
+    config_error = 'try{t.call(this,e)}catch(e){}'
+    assert source.count(config_error) == 1, "Unexpected settings dispatcher"
+    source = source.replace(config_error, 'try{t.call(this,e)}catch(e){console.error("YakuzaVideo: Einstellung konnte nicht angewendet werden",e)}')
     response_hook = 'JSON.parse=function(){var e=vo.apply(this,arguments);try{'
     assert source.count(response_hook) == 1
     source = source.replace(response_hook, response_hook + 'yvObserveStartupBrowse(e);if(window.__yvDismissedVideos)window.__yvDismissedVideos.filter(e);')
@@ -239,7 +256,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Abgelehnte Videos nach bestätigter Rückmeldung an YouTube dauerhaft aus Empfehlungen filtern.","Startseite auch beim Zurückkehren aus dem Hintergrund aktualisieren.","Fortschrittsbalken anzeigen und Videos an der gespeicherten Stelle fortsetzen."]}}
+        "changelog_de":["SponsorBlock beim laufenden Video anwenden und geänderte Segment-Einstellungen sofort übernehmen.","DeArrow-Titel und Vorschaubilder an sichtbaren Videokacheln anwenden.","Ansichtseinstellungen nach dem Schließen des Menüs anwenden und den Funktionsstatus anzeigen."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)

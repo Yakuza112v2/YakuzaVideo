@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const script=fs.readFileSync(process.argv[2],'utf8');const a=script.indexOf('function yvObserveStartupBrowse('),b=script.indexOf('function po(e,t){',a),code=script.slice(a,b);
+const script=fs.readFileSync(process.argv[2],'utf8');const a=script.indexOf('function yvObserveStartupBrowse('),b=script.indexOf('function yvInstallBrowseSettings(',a),code=script.slice(a,b);
 const command={clickTrackingParams:'fixture-tracking',loadReloadContinuationCommand:{continuation:'server-issued-home-continuation',targetId:'browse-feedFEtopics'}};
 function environment({ready=true,hash='#/',enabled=true,target=null,identity={get:()=>({})},respond=true}={}){
  let now=0,id=0;const timers=new Map(),windowListeners=new Map(),documentListeners=new Map(),commands=[];

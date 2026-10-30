@@ -11,6 +11,8 @@ YouTube auf dem Fernseher – mit Werbeblockierung, zusätzlichen Wiedergabeopti
 - **Animiertes Startlogo:** Dein YakuzaVideo-Logo wird beim Start mindestens drei Sekunden angezeigt.
 - **Werbeblockierung:** Videowerbung blockieren.
 - **Sponsoring überspringen:** Sponsoring-Segmente, Intros und Abspänne nach deinen Einstellungen überspringen, sofern Segmentdaten vorliegen.
+- **DeArrow:** Alternative Videotitel und Vorschaubilder verwenden, sofern passende Daten vorliegen.
+- **Funktionsstatus:** In den SponsorBlock- und DeArrow-Einstellungen sehen, ob Daten geladen und angewendet wurden.
 - **Wiedergabe anpassen:** Geschwindigkeit und bevorzugte Videoqualität einstellen.
 - **Untertitel anpassen:** Sprache und Darstellung auswählen und die Darstellung speichern.
 - **Videos organisieren:** Warteschlange nutzen, Videos in Playlists speichern oder zu „Später ansehen“ hinzufügen.
