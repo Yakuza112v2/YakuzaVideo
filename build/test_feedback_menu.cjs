@@ -1,6 +1,6 @@
 const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:assert/strict');
 const script = fs.readFileSync(process.argv[2], 'utf8');
-const start = script.indexOf('function xo('), end = script.indexOf('function Ao(', start);
+const start = script.indexOf('function xo('), end = script.indexOf('function yvInstallFeedbackUi(', start);
 const translations = JSON.parse(fs.readFileSync(__dirname + '/de.json', 'utf8'));
 const context = {
     location: {hash: "#/"}, btoa: value => Buffer.from(value, "binary").toString("base64"),
@@ -13,7 +13,7 @@ vm.createContext(context); vm.runInContext(script.slice(start, end), context);
 const panel = () => ({showEngagementPanelEndpoint: {identifier: {tag: 'video-menu'}, globalConfiguration: {params: 'server-provided-params'}}});
 const card = command => ({tileRenderer: {onLongPressCommand: command}});
 const native = (text, token) => ({menuServiceItemRenderer: {text: {simpleText: text}, serviceEndpoint: {feedbackEndpoint: {feedbackToken: token}}}});
-const actions = items => items.map(item => item.menuServiceItemRenderer?.serviceEndpoint?.customAction?.action).filter(Boolean);
+const actions = items => items.map(item => item.menuServiceItemRenderer?.serviceEndpoint?.playlistEditEndpoint?.customAction?.action).filter(Boolean);
 let checks = 0;
 function check(name, fn) { fn(); checks++; }
 check('unrelated feedback token must not hide either action', () => {
@@ -21,7 +21,7 @@ check('unrelated feedback token must not hide either action', () => {
     context.xo(card(panel()), items);
     assert.equal(items[0], unrelated); assert.deepEqual(actions(items), ['NOT_INTERESTED', 'DONT_RECOMMEND_CHANNEL']);
     assert.equal(items[1].menuServiceItemRenderer.text.simpleText, 'Kein Interesse');
-    assert.equal(items[2].menuServiceItemRenderer.serviceEndpoint.customAction.parameters.params, 'server-provided-params');
+    assert.equal(items[2].menuServiceItemRenderer.serviceEndpoint.playlistEditEndpoint.customAction.parameters.params, 'server-provided-params');
 });
 check('wrapped command executor', () => {
     const items = []; context.xo(card({commandExecutorCommand: {commands: [{signalAction: {signal: 'ignored'}}, {innertubeCommand: panel()}]}}), items);
@@ -72,7 +72,7 @@ check('full video-card menu processing retains the feedback actions', () => {
 check('Home video without a panel command gets both options', () => {
     const item = {lockupViewModel: {contentId: 'NO6ZB9iF8kc', rendererContext: {commandContext: {onLongPress: {innertubeCommand: {showMenuCommand: {menu: {menuRenderer: {items: []}}}}}}}}};
     const items = []; context.xo(item, items); assert.deepEqual(actions(items), ['NOT_INTERESTED', 'DONT_RECOMMEND_CHANNEL']);
-    const params = items[0].menuServiceItemRenderer.serviceEndpoint.customAction.parameters;
+    const params = items[0].menuServiceItemRenderer.serviceEndpoint.playlistEditEndpoint.customAction.parameters;
     assert.equal(params.panelId, 'PAcontext_menu');
     // Compare against the public TV panel API integration fixture, not a guessed token.
     assert.equal(params.params, '-golCgtOTzZaQjlpRjhrYyCeAUITCAISD0ZFd2hhdF90b193YXRjaA==');
@@ -80,7 +80,7 @@ check('Home video without a panel command gets both options', () => {
 check('fallback is video-specific and restricted to Home', () => {
     const tile = card({}); tile.tileRenderer.contentId = 'QwGuhdnFPyo';
     const items = []; context.xo(tile, items);
-    const decoded = Buffer.from(items[0].menuServiceItemRenderer.serviceEndpoint.customAction.parameters.params, 'base64url');
+    const decoded = Buffer.from(items[0].menuServiceItemRenderer.serviceEndpoint.playlistEditEndpoint.customAction.parameters.params, 'base64url');
     assert.equal(decoded.subarray(5, 16).toString(), 'QwGuhdnFPyo');
     context.location.hash = '#/browse?c=FEsubscriptions'; const other = []; context.xo(tile, other); assert.equal(other.length, 0);
     context.location.hash = '#/';

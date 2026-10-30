@@ -16,6 +16,10 @@ YouTube auf dem Fernseher – mit Werbeblockierung, zusätzlichen Wiedergabeopti
 - **Videos organisieren:** Warteschlange nutzen, Videos in Playlists speichern oder zu „Später ansehen“ hinzufügen.
 - **Ansicht anpassen:** Shorts und Videovorschauen ein- oder ausblenden.
 - **YouTube-Konto verwenden:** Anmelden und auf deine Abos und Playlists zugreifen.
+- **Wiedergabefortschritt:** Roter Fortschrittsbalken an angeschauten Videokacheln.
+- **Videos fortsetzen:** Angefangene Videos an der gespeicherten Stelle weitersehen, auch nach einem App-Neustart.
+- **Empfehlungen:** Startseite beim Öffnen automatisch aktualisieren.
+- **Videomenü per Fernbedienung:** OK gedrückt halten für „Kein Interesse“ und „Keine Videos von diesem Kanal empfehlen“.
 - **Deutsche Zusatzmenüs:** Deutsche Videooptionen und Rückmeldungen.
 - **Eigener TV-Auftritt:** YakuzaVideo-App-Icon und passende Startkachel.
 - **Updates direkt in der App:** Neue Versionen aus diesem GitHub-Repository abrufen.

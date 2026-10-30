@@ -171,6 +171,9 @@ def adapt_script(source):
     menu_start = source.index('function xo(')
     menu_end = source.index('function Ao(', menu_start)
     source = source[:menu_start] + (Path(__file__).parent / 'feedback_menu.js').read_text(encoding='utf-8') + source[menu_end:]
+    ui = (Path(__file__).parent / 'feedback_ui.js').read_text(encoding='utf-8-sig')
+    watch_status = (Path(__file__).parent / 'watch_status.js').read_text(encoding='utf-8-sig')
+    source = source.replace('function Ao(', ui + '\nyvInstallFeedbackUi(Co,xo,ga,so);\n' + watch_status + '\nyvInstallWatchStatus();\nfunction Ao(', 1)
     feedback_start = source.index('function lo(')
     feedback_end = source.index('function uo(', feedback_start)
     source = source[:feedback_start] + (Path(__file__).parent / 'feedback_request.js').read_text(encoding='utf-8') + source[feedback_end:]
@@ -232,7 +235,7 @@ def build(apk, script, output, run):
     base = "https://github.com/Yakuza112v2/YakuzaVideo/releases/download/v" + version
     updates = {"package":{"downloadUrl":base+"/"+ASSET}, version:{"versionCode":code,
         "changelog":["YakuzaVideo for armeabi-v7a."],
-        "changelog_de":["Startseite beim Start über einen vollständigen Kategorienwechsel laden.","Videomenü auf der Startseite direkt abrufen, wenn Menüverweise fehlen."]}}
+        "changelog_de":["Videomenü direkt an den Startseitenkacheln vervollständigen.","Startseite mit dem originalen Aktualisieren-Befehl laden.","Fortschrittsbalken anzeigen und Videos an der gespeicherten Stelle fortsetzen."]}}
     (output/"update.json").write_text(json.dumps(updates, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     (output/"build.json").write_text(json.dumps({"version":version,"versionCode":code,"package":PACKAGE,"abi":"armeabi-v7a","minSdk":24,"upstreamApkSha256":APK_SHA256,"runtimeFile":runtime_name,"scriptUrl":runtime_url.decode('ascii')},indent=2)+"\n",encoding="utf-8")
     print("Prepared", version, "ABI armeabi-v7a, package", PACKAGE)

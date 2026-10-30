@@ -57,7 +57,7 @@ function xo(card, items) {
         });
         if (!exists) items.push(qa(ga(action.key), {
             clickTrackingParams: null,
-            customAction: {action: action.action, parameters: panel}
+            playlistEditEndpoint: {customAction: {action: action.action, parameters: panel}}
         }));
     }
 }
